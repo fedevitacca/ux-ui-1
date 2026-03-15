@@ -1,23 +1,119 @@
+---
+const { title = 'Milwaukee Bucks | Catálogo', description = 'Explora el roster, datos y próximos partidos de los Bucks en un solo lugar.' } =
+	Astro.props;
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="es" data-theme="light">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<meta name="description" content={description} />
+		<title>{title}</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="https://unpkg.com/open-props" />
+		<link rel="stylesheet" href="https://unpkg.com/open-props/normalize.min.css" />
+		<script is:inline>
+			(() => {
+				if (typeof window === 'undefined') return;
+				const stored = localStorage.getItem('theme');
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const theme = stored || (prefersDark ? 'dark' : 'light');
+				document.documentElement.dataset.theme = theme;
+			})();
+		</script>
 	</head>
 	<body>
-		<slot />
+		<div class="page-shell">
+			<slot />
+		</div>
 	</body>
 </html>
 
 <style>
-	html,
+	:root {
+		color-scheme: light;
+		font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+			sans-serif;
+		--brand: #00471b;
+		--brand-2: #1d428a;
+		--cream: #f4eee2;
+		--ink: #0f1720;
+		--muted: #3f4b57;
+		--surface: #ffffff;
+		--border: #e1e5ea;
+		--glow: rgba(0, 71, 27, 0.16);
+		--shadow-1: 0 10px 40px rgba(0, 0, 0, 0.08);
+		--shadow-2: 0 30px 80px rgba(0, 0, 0, 0.12);
+		--gradient: radial-gradient(circle at 20% 20%, rgba(0, 71, 27, 0.16), transparent 40%),
+			radial-gradient(circle at 80% 10%, rgba(29, 66, 138, 0.14), transparent 42%);
+		background-color: var(--cream);
+		color: var(--ink);
+	}
+
+	:root[data-theme='dark'] {
+		color-scheme: dark;
+		--cream: #0c1118;
+		--ink: #e9ecf1;
+		--muted: #94a3b8;
+		--surface: #0f1720;
+		--border: #1f2937;
+		--glow: rgba(0, 160, 76, 0.12);
+		--shadow-1: 0 10px 40px rgba(0, 0, 0, 0.35);
+		--shadow-2: 0 30px 80px rgba(0, 0, 0, 0.45);
+		--gradient: radial-gradient(circle at 18% 18%, rgba(0, 255, 135, 0.08), transparent 36%),
+			radial-gradient(circle at 82% 8%, rgba(48, 109, 250, 0.08), transparent 40%);
+		background-color: var(--surface);
+	}
+
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
 	body {
+		min-height: 100vh;
 		margin: 0;
-		width: 100%;
-		height: 100%;
+		background: var(--cream);
+		color: var(--ink);
+		letter-spacing: -0.01em;
+	}
+
+	a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	p {
+		color: var(--muted);
+		line-height: 1.7;
+	}
+
+	.page-shell {
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+		background-image: var(--gradient);
+		background-repeat: no-repeat;
+		background-size: cover;
+	}
+
+	button {
+		font-family: inherit;
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--brand-2);
+		outline-offset: 3px;
+		border-radius: 8px;
 	}
 </style>

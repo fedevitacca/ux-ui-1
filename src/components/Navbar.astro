@@ -1,0 +1,179 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+
+const links = [
+	{ href: '#top', label: 'Inicio' },
+	{ href: '#roster', label: 'Roster' },
+	{ href: '#schedule', label: 'Calendario' },
+	{ href: '#extras', label: 'Highlights' }
+];
+---
+
+<header class="site-header">
+	<div class="inner">
+		<a class="brand" href="#top" aria-label="Volver al inicio">
+			<span class="brand__dot"></span>
+			<span class="brand__text">
+				Bucks <span class="sub">Catalog</span>
+			</span>
+		</a>
+
+		<nav aria-label="Secciones principales">
+			<ul>
+				{links.map((item) => (
+					<li><a href={item.href}>{item.label}</a></li>
+				))}
+			</ul>
+		</nav>
+
+		<div class="actions">
+			<a class="ghost" href="https://www.nba.com/bucks/tickets" target="_blank" rel="noreferrer">
+				Tickets
+			</a>
+			<ThemeToggle />
+		</div>
+	</div>
+</header>
+
+<style>
+	.site-header {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		backdrop-filter: blur(12px);
+		background: color-mix(in srgb, var(--surface) 88%, transparent);
+		border-bottom: 1px solid var(--border);
+	}
+
+	.inner {
+		margin: 0 auto;
+		max-width: 1180px;
+		padding: 0.9rem 1.25rem;
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		align-items: center;
+		gap: 1.5rem;
+	}
+
+	.brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.65rem;
+		font-weight: 700;
+		font-size: 1.05rem;
+		letter-spacing: -0.01em;
+	}
+
+	.brand__dot {
+		width: 38px;
+		height: 38px;
+		border-radius: 12px;
+		background: linear-gradient(140deg, var(--brand) 0%, #197d3b 50%, #0b2a18 100%);
+		box-shadow: 0 10px 30px var(--glow);
+		border: 1px solid color-mix(in srgb, var(--brand) 60%, white 40%);
+	}
+
+	.brand__text .sub {
+		display: inline-block;
+		font-weight: 500;
+		color: var(--muted);
+	}
+
+	nav ul {
+		list-style: none;
+		display: flex;
+		align-items: center;
+		gap: 0.9rem;
+		margin: 0;
+		padding: 0;
+	}
+
+	nav a {
+		padding: 0.45rem 0.75rem;
+		border-radius: 12px;
+		font-weight: 600;
+		color: var(--muted);
+		border: 1px solid transparent;
+		transition: color 120ms ease, background 120ms ease, border-color 120ms ease,
+			transform 120ms ease;
+	}
+
+	nav a:hover {
+		color: var(--ink);
+		background: color-mix(in srgb, var(--glow) 50%, transparent);
+		border-color: var(--border);
+		transform: translateY(-1px);
+	}
+
+	.actions {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		justify-content: flex-end;
+	}
+
+	.ghost {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.6rem 0.95rem;
+		border-radius: 12px;
+		border: 1px solid var(--border);
+		color: var(--ink);
+		font-weight: 700;
+		background: color-mix(in srgb, var(--surface) 70%, transparent);
+		transition: border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+	}
+
+	.ghost:hover {
+		transform: translateY(-1px);
+		border-color: color-mix(in srgb, var(--brand) 40%, var(--border) 60%);
+		box-shadow: var(--shadow-1);
+	}
+
+	@media (max-width: 960px) {
+		.inner {
+			grid-template-columns: 1fr;
+			grid-template-areas:
+				'brand actions'
+				'nav nav';
+			align-items: center;
+		}
+
+		.brand {
+			grid-area: brand;
+		}
+
+		.actions {
+			grid-area: actions;
+			justify-content: flex-end;
+		}
+
+		nav {
+			grid-area: nav;
+			overflow-x: auto;
+		}
+
+		nav ul {
+			justify-content: space-between;
+		}
+	}
+
+	@media (max-width: 640px) {
+		.inner {
+			grid-template-columns: 1fr auto;
+			grid-template-areas:
+				'brand actions'
+				'nav nav';
+		}
+
+		nav ul {
+			gap: 0.5rem;
+		}
+
+		nav a {
+			padding: 0.4rem 0.6rem;
+			font-size: 0.95rem;
+		}
+	}
+</style>

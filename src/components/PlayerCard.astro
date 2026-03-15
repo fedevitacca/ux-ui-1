@@ -1,0 +1,133 @@
+---
+export interface Player {
+	name: string;
+	position?: string;
+	heightCm?: number | null;
+	weightKg?: number | null;
+	number?: string | number | null;
+	college?: string | null;
+	bio?: string;
+}
+
+const { player } = Astro.props;
+const heightLabel = player.heightCm ? `${player.heightCm} cm` : 'Altura N/D';
+const weightLabel = player.weightKg ? `${player.weightKg} kg` : 'Peso N/D';
+const jersey = player.number ?? '—';
+const position = player.position || 'N/A';
+---
+
+<article
+	class="player-card"
+	data-name={player.name.toLowerCase()}
+	data-position={position.toLowerCase()}
+	data-height={player.heightCm ?? ''}
+	data-weight={player.weightKg ?? ''}
+>
+	<div class="card-top">
+		<span class="badge">{position}</span>
+		<span class="jersey">#{jersey}</span>
+	</div>
+	<h3>{player.name}</h3>
+	<p class="bio">{player.bio ?? 'Energía, IQ y ética de trabajo al estilo Bucks.'}</p>
+
+	<dl class="meta">
+		<div>
+			<dt>Altura</dt>
+			<dd>{heightLabel}</dd>
+		</div>
+		<div>
+			<dt>Peso</dt>
+			<dd>{weightLabel}</dd>
+		</div>
+		<div>
+			<dt>Colegial</dt>
+			<dd>{player.college ?? 'NBA'}</dd>
+		</div>
+	</dl>
+</article>
+
+<style>
+	.player-card {
+		position: relative;
+		padding: 1.15rem;
+		border-radius: 18px;
+		background: linear-gradient(145deg, var(--surface) 0%, color-mix(in srgb, var(--surface) 90%, var(--brand) 10%) 100%);
+		border: 1px solid color-mix(in srgb, var(--border) 90%, var(--brand) 10%);
+		box-shadow: var(--shadow-1);
+		transition: transform 160ms ease, box-shadow 180ms ease, border-color 180ms ease;
+		overflow: hidden;
+	}
+
+	.player-card::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--brand) 35%, transparent) 0%, transparent 46%);
+		opacity: 0;
+		transition: opacity 200ms ease;
+		pointer-events: none;
+	}
+
+	.player-card:hover {
+		transform: translateY(-6px);
+		box-shadow: var(--shadow-2);
+		border-color: color-mix(in srgb, var(--brand) 40%, var(--border) 60%);
+	}
+
+	.player-card:hover::after {
+		opacity: 1;
+	}
+
+	.card-top {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.5rem;
+	}
+
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.35rem 0.7rem;
+		font-weight: 700;
+		font-size: 0.85rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--brand) 12%, transparent);
+		color: var(--brand);
+		border: 1px solid color-mix(in srgb, var(--brand) 35%, transparent);
+	}
+
+	.jersey {
+		font-weight: 800;
+		color: var(--muted);
+	}
+
+	h3 {
+		margin: 0 0 0.35rem;
+		font-size: 1.2rem;
+		letter-spacing: -0.01em;
+	}
+
+	.bio {
+		margin: 0 0 0.75rem;
+	}
+
+	.meta {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+		gap: 0.65rem;
+		margin: 0;
+	}
+
+	dt {
+		font-size: 0.85rem;
+		color: var(--muted);
+	}
+
+	dd {
+		margin: 0;
+		font-weight: 700;
+		color: var(--ink);
+	}
+</style>

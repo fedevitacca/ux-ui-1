@@ -1,0 +1,126 @@
+<div class="theme-toggle" data-theme-toggle>
+	<button type="button" aria-label="Cambiar modo claro/oscuro">
+		<span class="icon sun" aria-hidden="true">
+			<svg viewBox="0 0 24 24" role="presentation">
+				<path
+					fill="currentColor"
+					d="M12 5.5a6.5 6.5 0 1 0 6.5 6.5A6.51 6.51 0 0 0 12 5.5Zm0-4a1 1 0 0 0-1 1v1.25a1 1 0 0 0 2 0V2.5a1 1 0 0 0-1-1Zm0 19.75a1 1 0 0 0-1 1v1.25a1 1 0 1 0 2 0V22.5a1 1 0 0 0-1-1Zm10-9.25h-1.25a1 1 0 1 0 0 2H22a1 1 0 0 0 0-2Zm-19.75 0H1a1 1 0 0 0 0 2h1.25a1 1 0 1 0 0-2Zm15.66-8.43a1 1 0 0 0-1.41 1.41l.88.88a1 1 0 0 0 1.41-1.41Zm-12.02 12-1 .95a1 1 0 1 0 1.38 1.45l1-.95a1 1 0 1 0-1.38-1.45Zm12.02 1.38a1 1 0 0 0-1.41 1.41l.88.88a1 1 0 1 0 1.41-1.41Zm-12.02-12-1-.95A1 1 0 1 0 3.9 6.7l1 .95A1 1 0 1 0 3.52 8.1Z"
+				/>
+			</svg>
+		</span>
+		<span class="icon moon" aria-hidden="true">
+			<svg viewBox="0 0 24 24" role="presentation">
+				<path
+					fill="currentColor"
+					d="M21.47 14.39a1 1 0 0 0-1.1-.19 7.06 7.06 0 0 1-3.13.73 7.19 7.19 0 0 1-7.2-7.18 7 7 0 0 1 .75-3.14 1 1 0 0 0-1.29-1.38 9.21 9.21 0 1 0 12.27 12.27 1 1 0 0 0-.3-1.11Z"
+				/>
+			</svg>
+		</span>
+		<span class="label" data-theme-label>Modo oscuro</span>
+	</button>
+</div>
+
+<script client:load>
+	const root = document.documentElement;
+	const instances = document.querySelectorAll('[data-theme-toggle]');
+
+	const setTheme = (theme) => {
+		root.dataset.theme = theme;
+		localStorage.setItem('theme', theme);
+	};
+
+	const init = (wrapper) => {
+		const button = wrapper.querySelector('button');
+		const label = wrapper.querySelector('[data-theme-label]');
+
+		const sync = () => {
+			const isDark = root.dataset.theme === 'dark';
+			label.textContent = isDark ? 'Modo claro' : 'Modo oscuro';
+			button.setAttribute('aria-pressed', String(isDark));
+			button.classList.toggle('is-dark', isDark);
+		};
+
+		button?.addEventListener('click', () => {
+			const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+			setTheme(next);
+			sync();
+		});
+
+		sync();
+	};
+
+	instances.forEach(init);
+</script>
+
+<style>
+	.theme-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.55rem 0.9rem;
+		border-radius: 999px;
+		border: 1px solid var(--border);
+		background: var(--surface);
+		color: var(--ink);
+		cursor: pointer;
+		box-shadow: var(--shadow-1);
+		transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease,
+			background 150ms ease;
+	}
+
+	button:hover {
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-2);
+		border-color: rgba(0, 71, 27, 0.35);
+	}
+
+	button:active {
+		transform: translateY(0);
+	}
+
+	.icon {
+		width: 1.2rem;
+		height: 1.2rem;
+		display: grid;
+		place-items: center;
+		color: var(--brand);
+	}
+
+	.icon svg {
+		width: 100%;
+		height: 100%;
+	}
+
+	.moon {
+		display: none;
+		color: var(--brand-2);
+	}
+
+	button.is-dark .sun {
+		display: none;
+	}
+
+	button.is-dark .moon {
+		display: block;
+	}
+
+	.label {
+		font-weight: 600;
+		font-size: 0.95rem;
+	}
+
+	@media (max-width: 640px) {
+		.label {
+			display: none;
+		}
+		button {
+			padding: 0.55rem;
+		}
+	}
+</style>

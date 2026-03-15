@@ -1,0 +1,144 @@
+---
+import PlayerCard, { type Player } from './PlayerCard.astro';
+
+interface Props {
+	players: Player[];
+	positions: string[];
+}
+
+const { players, positions } = Astro.props;
+---
+
+<div class="roster">
+	<div class="grid" data-count={players.length}>
+		{players.map((player) => (
+			<PlayerCard player={player} />
+		))}
+	</div>
+
+	<p class="empty" hidden>Sin resultados. Ajustá la búsqueda o filtros.</p>
+</div>
+
+<script client:load>
+	const container = document.querySelector('.roster');
+	if (!container) return;
+
+	const searchInput = container.querySelector('#player-search');
+	const positionSelect = container.querySelector('#player-position');
+	const resetButton = container.querySelector('#reset-filters');
+	const emptyState = container.querySelector('.empty');
+	const cards = [...container.querySelectorAll('.player-card')].map((el) => ({
+		el,
+		name: el.dataset.name ?? '',
+		position: el.dataset.position ?? 'n/a'
+	}));
+
+	const applyFilters = () => {
+		const term = searchInput.value.trim().toLowerCase();
+		const pos = positionSelect.value;
+		let visible = 0;
+
+		cards.forEach((card) => {
+			const matchesTerm = card.name.includes(term);
+			const matchesPos = pos === 'all' || card.position === pos;
+			const show = matchesTerm && matchesPos;
+			card.el.classList.toggle('is-hidden', !show);
+			if (show) visible += 1;
+		});
+
+		emptyState.hidden = visible !== 0;
+	};
+
+	searchInput?.addEventListener('input', applyFilters);
+	positionSelect?.addEventListener('change', applyFilters);
+	resetButton?.addEventListener('click', () => {
+		searchInput.value = '';
+		positionSelect.value = 'all';
+		applyFilters();
+	});
+
+	applyFilters();
+</script>
+
+<style>
+	.roster {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+	}
+
+	.filters {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 0.75rem;
+		align-items: end;
+	}
+
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		font-weight: 600;
+		color: var(--muted);
+	}
+
+	input,
+	select {
+		width: 100%;
+		padding: 0.7rem 0.85rem;
+		border-radius: 12px;
+		border: 1px solid var(--border);
+		background: var(--surface);
+		color: var(--ink);
+		box-shadow: var(--shadow-1);
+		transition: border-color 120ms ease, box-shadow 150ms ease;
+	}
+
+	input:focus,
+	select:focus {
+		border-color: color-mix(in srgb, var(--brand) 35%, var(--border) 65%);
+		box-shadow: var(--shadow-2);
+	}
+
+	button {
+		padding: 0.85rem 1rem;
+		border-radius: 12px;
+		border: 1px solid color-mix(in srgb, var(--brand-2) 35%, var(--border) 65%);
+		background: linear-gradient(
+			130deg,
+			color-mix(in srgb, var(--brand-2) 20%, var(--surface) 80%),
+			color-mix(in srgb, var(--brand) 24%, var(--surface) 76%)
+		);
+		color: var(--ink);
+		font-weight: 700;
+		cursor: pointer;
+		box-shadow: var(--shadow-1);
+		transition: transform 140ms ease, box-shadow 140ms ease, border-color 120ms ease;
+	}
+
+	button:hover {
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-2);
+		border-color: color-mix(in srgb, var(--brand-2) 40%, var(--brand) 60%);
+	}
+
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		gap: 1rem;
+	}
+
+	.player-card.is-hidden {
+		display: none;
+	}
+
+	.empty {
+		margin: 0;
+		padding: 1rem;
+		border-radius: 12px;
+		background: color-mix(in srgb, var(--brand) 8%, var(--surface));
+		color: var(--muted);
+		border: 1px dashed var(--border);
+		text-align: center;
+	}
+</style>
