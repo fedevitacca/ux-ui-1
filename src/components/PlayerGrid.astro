@@ -1,59 +1,88 @@
 ---
-import PlayerCard, { type Player } from './PlayerCard.astro';
+import PlayerCard from './PlayerCard.astro';
+import type { Player } from '../data/bucks';
 
 interface Props {
 	players: Player[];
 	positions: string[];
 }
 
-const { players, positions } = Astro.props;
+const { players, positions }: Props = Astro.props;
 ---
 
-<div class="roster">
+<div class="roster" data-roster>
+	<div class="filters">
+		<label class="field">
+			<span>Buscar</span>
+			<input
+				id="player-search"
+				type="search"
+				name="search"
+				placeholder="Giannis, Turner, Kuzma..."
+				autocomplete="off"
+			/>
+		</label>
+
+		<label class="field">
+			<span>Posicion</span>
+			<select id="player-position" name="position">
+				<option value="all">Todas</option>
+				{positions.map((position) => (
+					<option value={position.toLowerCase()}>{position}</option>
+				))}
+			</select>
+		</label>
+
+		<button id="reset-filters" type="button">Limpiar filtros</button>
+	</div>
+
 	<div class="grid" data-count={players.length}>
 		{players.map((player) => (
 			<PlayerCard player={player} />
 		))}
 	</div>
 
-	<p class="empty" hidden>Sin resultados. Ajustá la búsqueda o filtros.</p>
+	<p class="empty" hidden>Sin resultados. Ajusta la busqueda o el filtro.</p>
 </div>
 
 <script client:load>
-	const container = document.querySelector('.roster');
+	const container = document.querySelector('[data-roster]');
 	if (!container) return;
 
 	const searchInput = container.querySelector('#player-search');
 	const positionSelect = container.querySelector('#player-position');
 	const resetButton = container.querySelector('#reset-filters');
 	const emptyState = container.querySelector('.empty');
-	const cards = [...container.querySelectorAll('.player-card')].map((el) => ({
-		el,
-		name: el.dataset.name ?? '',
-		position: el.dataset.position ?? 'n/a'
+	const cards = [...container.querySelectorAll('.player-card')].map((element) => ({
+		element,
+		name: element.dataset.name ?? '',
+		position: element.dataset.position ?? 'n/a'
 	}));
 
 	const applyFilters = () => {
-		const term = searchInput.value.trim().toLowerCase();
-		const pos = positionSelect.value;
+		const term = searchInput instanceof HTMLInputElement ? searchInput.value.trim().toLowerCase() : '';
+		const position =
+			positionSelect instanceof HTMLSelectElement ? positionSelect.value.toLowerCase() : 'all';
 		let visible = 0;
 
 		cards.forEach((card) => {
 			const matchesTerm = card.name.includes(term);
-			const matchesPos = pos === 'all' || card.position === pos;
-			const show = matchesTerm && matchesPos;
-			card.el.classList.toggle('is-hidden', !show);
+			const matchesPosition = position === 'all' || card.position === position;
+			const show = matchesTerm && matchesPosition;
+			card.element.classList.toggle('is-hidden', !show);
 			if (show) visible += 1;
 		});
 
-		emptyState.hidden = visible !== 0;
+		if (emptyState instanceof HTMLElement) {
+			emptyState.hidden = visible !== 0;
+		}
 	};
 
 	searchInput?.addEventListener('input', applyFilters);
 	positionSelect?.addEventListener('change', applyFilters);
 	resetButton?.addEventListener('click', () => {
-		searchInput.value = '';
-		positionSelect.value = 'all';
+		if (searchInput instanceof HTMLInputElement) searchInput.value = '';
+		if (positionSelect instanceof HTMLSelectElement) positionSelect.value = 'all';
 		applyFilters();
 	});
 
@@ -69,7 +98,7 @@ const { players, positions } = Astro.props;
 
 	.filters {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: 0.75rem;
 		align-items: end;
 	}
@@ -85,24 +114,17 @@ const { players, positions } = Astro.props;
 	input,
 	select {
 		width: 100%;
-		padding: 0.7rem 0.85rem;
-		border-radius: 12px;
+		padding: 0.78rem 0.9rem;
+		border-radius: 14px;
 		border: 1px solid var(--border);
 		background: var(--surface);
 		color: var(--ink);
 		box-shadow: var(--shadow-1);
-		transition: border-color 120ms ease, box-shadow 150ms ease;
-	}
-
-	input:focus,
-	select:focus {
-		border-color: color-mix(in srgb, var(--brand) 35%, var(--border) 65%);
-		box-shadow: var(--shadow-2);
 	}
 
 	button {
-		padding: 0.85rem 1rem;
-		border-radius: 12px;
+		padding: 0.9rem 1rem;
+		border-radius: 14px;
 		border: 1px solid color-mix(in srgb, var(--brand-2) 35%, var(--border) 65%);
 		background: linear-gradient(
 			130deg,
@@ -113,18 +135,17 @@ const { players, positions } = Astro.props;
 		font-weight: 700;
 		cursor: pointer;
 		box-shadow: var(--shadow-1);
-		transition: transform 140ms ease, box-shadow 140ms ease, border-color 120ms ease;
+		transition: transform 140ms ease, box-shadow 140ms ease;
 	}
 
 	button:hover {
 		transform: translateY(-1px);
 		box-shadow: var(--shadow-2);
-		border-color: color-mix(in srgb, var(--brand-2) 40%, var(--brand) 60%);
 	}
 
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 		gap: 1rem;
 	}
 
@@ -140,5 +161,11 @@ const { players, positions } = Astro.props;
 		color: var(--muted);
 		border: 1px dashed var(--border);
 		text-align: center;
+	}
+
+	@media (max-width: 840px) {
+		.filters {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>

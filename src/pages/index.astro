@@ -1,688 +1,111 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
-import Section from '../components/Section.astro';
-import PlayerGrid from '../components/PlayerGrid.astro';
+import SectionNavigator from '../components/SectionNavigator.astro';
+import { getBucksData } from '../data/bucks';
 
-const BUCKS_ID = 17;
-const SEASON = 2025; // 2025-26 season start year
-const API_KEY = import.meta.env.BALLDONTLIE_API_KEY;
-const API_BASE = API_KEY ? 'https://api.balldontlie.io/v1' : 'https://www.balldontlie.io/api/v1';
-const authHeaders = API_KEY ? { Authorization: `Bearer ${API_KEY}` } : {};
+const { players, schedule, highlights } = await getBucksData();
+const baseUrl = import.meta.env.BASE_URL;
 
-const fallbackPlayers = [
+const navItems = [
 	{
-		name: 'Alex Antetokounmpo',
-		position: 'F',
-		heightCm: 203,
-		weightKg: 97,
-		number: 29,
-		college: '--',
-		bio: 'Ala fisico, corta sin pelota y corre la cancha.'
+		href: `${baseUrl}snapshot/`,
+		label: 'Snapshot',
+		eyebrow: 'Radiografia',
+		description: 'Estado de la temporada, lectura del momento Bucks y resumen rapido del contexto competitivo.',
+		meta: 'Resumen ejecutivo',
+		accent: 'green'
 	},
 	{
-		name: 'Giannis Antetokounmpo',
-		position: 'F',
-		heightCm: 211,
-		weightKg: 110,
-		number: 34,
-		college: '--',
-		bio: 'MVP, motor de transicion y ancla defensiva.'
+		href: `${baseUrl}roster/`,
+		label: 'Roster',
+		eyebrow: 'Plantel',
+		description: 'Todos los jugadores en una pagina dedicada con filtros, datos fisicos, edad y salario.',
+		meta: `${players.length} jugadores`,
+		accent: 'blue'
 	},
 	{
-		name: 'Thanasis Antetokounmpo',
-		position: 'F',
-		heightCm: 201,
-		weightKg: 99,
-		number: 43,
-		college: '--',
-		bio: 'Energizer defensivo, presion a toda la cancha.'
+		href: `${baseUrl}schedule/`,
+		label: 'Calendario',
+		eyebrow: 'Partidos',
+		description: 'Proximos juegos desde el 15 de marzo con contexto util para presentar cada cruce.',
+		meta: `${schedule.length} juegos`,
+		accent: 'gold'
 	},
 	{
-		name: 'Ousmane Dieng',
-		position: 'F',
-		heightCm: 206,
-		weightKg: 84,
-		number: 21,
-		college: '--',
-		bio: 'Ala largo con manejo y upside defensivo.'
-	},
-	{
-		name: 'AJ Green',
-		position: 'G',
-		heightCm: 193,
-		weightKg: 86,
-		number: 20,
-		college: 'Northern Iowa',
-		bio: 'Mano caliente, especialista catch-and-shoot.'
-	},
-	{
-		name: 'Gary Harris',
-		position: 'G',
-		heightCm: 193,
-		weightKg: 95,
-		number: 11,
-		college: 'Michigan State',
-		bio: 'Veterano 3&D, corta linea de pase.'
-	},
-	{
-		name: 'Andre Jackson Jr.',
-		position: 'G',
-		heightCm: 198,
-		weightKg: 95,
-		number: 44,
-		college: 'UConn',
-		bio: 'Playmaker secundario, defiende multiples posiciones.'
-	},
-	{
-		name: 'Kyle Kuzma',
-		position: 'F',
-		heightCm: 203,
-		weightKg: 100,
-		number: 18,
-		college: 'Utah',
-		bio: 'Ala anotador, ataca closeouts y post alto.'
-	},
-	{
-		name: 'Pete Nance',
-		position: 'F',
-		heightCm: 206,
-		weightKg: 102,
-		number: 35,
-		college: 'North Carolina',
-		bio: 'Stretch four con lectura de pase extra.'
-	},
-	{
-		name: 'Kevin Porter Jr.',
-		position: 'G',
-		heightCm: 196,
-		weightKg: 92,
-		number: 7,
-		college: 'USC',
-		bio: 'Shot-creator con stepback y pick-and-roll.'
-	},
-	{
-		name: 'Bobby Portis',
-		position: 'F/C',
-		heightCm: 206,
-		weightKg: 113,
-		number: 9,
-		college: 'Arkansas',
-		bio: 'Rebote ofensivo y tiro de media distancia.'
-	},
-	{
-		name: 'Taurean Prince',
-		position: 'F',
-		heightCm: 198,
-		weightKg: 99,
-		number: 12,
-		college: 'Baylor',
-		bio: '3&D confiable, defiende alas fuertes.'
-	},
-	{
-		name: 'Ryan Rollins',
-		position: 'G',
-		heightCm: 191,
-		weightKg: 82,
-		number: 13,
-		college: 'Toledo',
-		bio: 'Combo guard con flotadoras y pull-up corto.'
-	},
-	{
-		name: 'Cormac Ryan',
-		position: 'G',
-		heightCm: 196,
-		weightKg: 88,
-		number: 30,
-		college: 'North Carolina',
-		bio: 'Perimetral ordenado, buen closeout controlado.'
-	},
-	{
-		name: 'Jericho Sims',
-		position: 'C',
-		heightCm: 208,
-		weightKg: 113,
-		number: 0,
-		college: 'Texas',
-		bio: 'Vertical spacer, lob threat y rebote.'
-	},
-	{
-		name: 'Cam Thomas',
-		position: 'G',
-		heightCm: 191,
-		weightKg: 95,
-		number: 24,
-		college: 'LSU',
-		bio: 'Microondas de banca, one-on-one scorer.'
-	},
-	{
-		name: 'Gary Trent Jr.',
-		position: 'G',
-		heightCm: 196,
-		weightKg: 93,
-		number: 5,
-		college: 'Duke',
-		bio: '3&D agresivo, puntea lineas de pase.'
-	},
-	{
-		name: 'Myles Turner',
-		position: 'C',
-		heightCm: 211,
-		weightKg: 113,
-		number: 3,
-		college: 'Texas',
-		bio: 'Rim protector elite y amenaza pick-and-pop.'
-	}
-];
-
-const fallbackSchedule = [
-	{ rival: 'Miami Heat', date: 'MAR 15', arena: 'Fiserv Forum', note: 'Duelo Este post All-Star' },
-	{ rival: 'Cleveland Cavaliers', date: 'MAR 18', arena: 'Fiserv Forum', note: 'Back-to-back en casa' },
-	{ rival: 'Philadelphia 76ers', date: 'MAR 21', arena: 'Wells Fargo Center', note: 'Visita clave por siembra' },
-	{ rival: 'Boston Celtics', date: 'MAR 24', arena: 'TD Garden', note: 'Rival directo top Este' },
-	{ rival: 'Chicago Bulls', date: 'MAR 27', arena: 'United Center', note: 'Clasico divisional' },
-	{ rival: 'New York Knicks', date: 'MAR 30', arena: 'Madison Square Garden', note: 'Road trip cierre de mes' }
-];
-
-const safeFetch = async (url) => {
-	try {
-		const res = await fetch(url, { headers: authHeaders });
-		if (!res.ok) throw new Error(`status ${res.status}`);
-		return await res.json();
-	} catch (err) {
-		console.error('API fetch fallo', url, err);
-		return null;
-	}
-};
-
-const apiRosterRes = await safeFetch(`${API_BASE}/players?team_ids[]=${BUCKS_ID}&per_page=100`);
-const apiScheduleRes = await safeFetch(
-	`${API_BASE}/games?team_ids[]=${BUCKS_ID}&seasons[]=${SEASON}&per_page=100`
-);
-
-const apiPlayers =
-	apiRosterRes?.data?.map((player) => {
-		const heightCm =
-			player.height_feet && player.height_inches
-				? Math.round((player.height_feet * 12 + player.height_inches) * 2.54)
-				: null;
-		const weightKg = player.weight_pounds ? Math.round(player.weight_pounds / 2.205) : null;
-
-		return {
-			name: `${player.first_name} ${player.last_name}`,
-			position: player.position || 'N/A',
-			heightCm,
-			weightKg,
-			number: player.jersey_number ?? '-',
-			college: player.college || 'NBA',
-			bio: 'Dato importado desde la API balldontlie.'
-		};
-	}) ?? [];
-
-const apiSchedule =
-	apiScheduleRes?.data
-		?.slice(0, 6)
-		?.map((game) => {
-			const dateObj = new Date(game.date);
-			const dateLabel = dateObj
-				.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })
-				.toUpperCase();
-			const isHome = game.home_team?.id === BUCKS_ID;
-			return {
-				rival: isHome ? game.visitor_team?.full_name : game.home_team?.full_name,
-				date: dateLabel,
-				arena: isHome ? 'Fiserv Forum' : game.home_team?.city ?? 'Visita',
-				note: game.status || (game.postseason ? 'Playoffs' : 'Temporada regular')
-			};
-		}) ?? [];
-
-const players = apiPlayers.length ? apiPlayers : fallbackPlayers;
-const schedule = apiSchedule.length ? apiSchedule : fallbackSchedule;
-const positions = Array.from(new Set(players.map((p) => p.position || 'N/A'))).filter(Boolean);
-
-const stats = [
-	{ label: 'Record 25-26', value: apiScheduleRes?.meta?.total_count ? 'En vivo' : '27-39 (15 MAR)', detail: '11º en el Este' },
-	{ label: 'Ofensiva', value: '110 ORTG'},
-	{ label: 'Rango 3PT', value: '38.5% 3PT', detail: 'Volumen alto' },
-];
-
-const highlights = [
-	{
-		title: 'Drop coverage + longitud',
-		copy: 'Brook protege el aro mientras las alas niegan lineas de pase. Ajustes a switch con quintetos bajos.',
-		tag: 'Sistema defensivo'
-	},
-	{
-		title: 'Pick & roll Dame-Giannis',
-		copy: 'Acciones Spain y double drag liberan tiros profundos o roll violento. Esquinas ocupadas para castigar ayudas.',
-		tag: 'Ataque'
-	},
-	{
-		title: 'Cultura \"Fear the Deer\"',
-		copy: 'Identidad blue-collar, crowd ruidosa y enfasis en transicion. Equipo de roles claros y versatilidad.',
-		tag: 'Identidad'
+		href: `${baseUrl}identity/`,
+		label: 'Identidad',
+		eyebrow: 'Narrativa',
+		description: 'Caracteristicas tacticas y visuales para darle tono al proyecto y defender la propuesta.',
+		meta: `${highlights.length} ejes`,
+		accent: 'dark'
 	}
 ];
 ---
 
 <Layout
-	title="Milwaukee Bucks | Catalogo 25-26"
-	description="Catalogo interactivo del roster, estadisticas y calendario 2025-26 de los Milwaukee Bucks."
+	title="Milwaukee Bucks | Portal 25-26"
+	description="Portada del catalogo 25-26 de los Milwaukee Bucks con accesos grandes a cada vista."
 >
 	<Navbar />
-	<main class="content" id="top">
-		<section class="hero" aria-labelledby="hero-title">
-			<div class="hero__copy">
-				<p class="eyebrow">Milwaukee Bucks</p>
-				<h1 id="hero-title">Catalogo 25-26 del roster y la cultura deer.</h1>
-				<p class="lead">
-					Explora jugadores, numeros y proximos partidos. Busquedas y filtros en vivo, modo oscuro y datos
-					traidos desde la API de la NBA (balldontlie).
-				</p>
-				<div class="cta">
-					<a class="primary" href="#roster">Ver roster</a>
-					<a class="secondary" href="#schedule">Calendario</a>
-				</div>
-				<div class="chips" aria-label="Tecnologias usadas">
-					<span class="chip">Astro</span>
-					<span class="chip">Open Props</span>
-					<span class="chip">API fetch</span>
-					<span class="chip">Dark mode</span>
-				</div>
-			</div>
-			<div class="hero__panel" aria-label="Resumen Bucks">
-				<div class="panel__top">
-					<p class="tiny">2025-26 Snapshot</p>
-					<strong>Fear the Deer</strong>
-					<p>Identidad fisica, spacing y ejecucion en media cancha.</p>
-				</div>
-				<ul class="panel__stats">
-					<li>
-						<span>Ofensiva</span>
-						<strong>110</strong>
-						<small>ORTG</small>
-					</li>
-					<li>
-						<span>Triple</span>
-						<strong>38.5%</strong>
-						<small>3PT</small>
-					</li>
-					<li>
-						<span>Posicion</span>
-						<strong>Top 11</strong>
-						<small>Afuera de playoffs</small>
-					</li>
-				</ul>
-				<p class="panel__tag">Actualizado con datos de ESPN y Bucks sitio oficial.</p>
-			</div>
+	<main class="landing">
+		<section class="intro">
+			<p class="eyebrow">Milwaukee Bucks</p>
+			<h1>Elegi una vista y entra a una pantalla dedicada.</h1>
+			<p class="lead">
+				La home ahora funciona como portal. Cada card ocupa casi toda la pantalla y abre una ruta
+				distinta con la informacion desarrollada.
+			</p>
 		</section>
 
-
-		<Section
-			id="roster"
-			eyebrow="Roster vivo"
-			title="Explora jugadores, posiciones y metricas"
-			description="Busca y filtra por posicion. Los datos se obtienen de balldontlie; si la API falla, usamos un roster curado."
-		>
-			<PlayerGrid players={players} positions={positions} />
-		</Section>
-
-		<Section
-			id="schedule"
-			eyebrow="Calendario"
-			title="Proximos partidos clave"
-			description="Microagendas para preparar scouting y activaciones."
-		>
-			<div class="schedule-grid">
-				{schedule.map((game) => (
-					<article class="game-card">
-						<p class="tiny">{game.date}</p>
-						<h3>{game.rival}</h3>
-						<p class="sub">{game.arena}</p>
-						<p class="note">{game.note}</p>
-					</article>
-				))}
-			</div>
-		</Section>
+		<SectionNavigator items={navItems} />
 	</main>
-
-	<footer class="footer">
-		<div class="footer__inner">
-			<div>
-				<p class="eyebrow">Fear the Deer</p>
-				<strong>Milwaukee Bucks catalog</strong>
-				<p class="sub">
-					Hecho con Astro + Open Props. Modo oscuro, filtros en vivo y datos desde API externa.
-				</p>
-			</div>
-			<div class="footer__links">
-				<a href="#top">Ir arriba</a>
-				<a href="https://www.nba.com/bucks" target="_blank" rel="noreferrer">Sitio oficial</a>
-			</div>
-		</div>
-	</footer>
 </Layout>
 
 <style>
-	.content {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
+	.landing {
+		display: grid;
+		grid-template-rows: auto 1fr;
 		gap: 1rem;
+		min-height: calc(100vh - 72px);
 	}
 
-	.hero {
-		max-width: 1180px;
-		margin: 1rem auto 0;
-		padding: clamp(1.5rem, 4vw, 2.75rem) 1.25rem 1.25rem;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-		gap: 1.5rem;
-		align-items: center;
-	}
-
-	.hero__copy h1 {
-		font-size: clamp(2.1rem, 5vw, 2.9rem);
-		margin: 0.2rem 0 0.65rem;
-		letter-spacing: -0.03em;
-	}
-
-	.lead {
-		margin-top: 0;
-		margin-bottom: 1rem;
-	}
-
-	.cta {
-		display: flex;
-		gap: 0.75rem;
-		flex-wrap: wrap;
-		margin-bottom: 0.75rem;
-	}
-
-	.primary,
-	.secondary {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.4rem;
-		padding: 0.85rem 1.2rem;
-		border-radius: 14px;
-		font-weight: 700;
-		border: 1px solid transparent;
-		box-shadow: var(--shadow-1);
-		transition: transform 150ms ease, box-shadow 150ms ease, border-color 160ms ease,
-			background 160ms ease;
-	}
-
-	.primary {
-		background: linear-gradient(135deg, var(--brand) 0%, #0b7030 50%, #0e2b1a 100%);
-		color: #f4f7f2;
-	}
-
-	.primary:hover {
-		transform: translateY(-2px);
-		box-shadow: var(--shadow-2);
-	}
-
-	.secondary {
-		border-color: var(--border);
-		background: var(--surface);
-		color: var(--ink);
-	}
-
-	.secondary:hover {
-		border-color: color-mix(in srgb, var(--brand-2) 40%, var(--border) 60%);
-		box-shadow: var(--shadow-2);
-		transform: translateY(-1px);
-	}
-
-	.chips {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.45rem;
-	}
-
-	.chip {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.35rem 0.65rem;
-		border-radius: 10px;
-		background: color-mix(in srgb, var(--brand) 10%, var(--surface));
-		color: var(--brand);
-		border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
-		font-weight: 700;
-		font-size: 0.9rem;
-	}
-
-	.chip.alt {
-		color: var(--brand-2);
-		background: color-mix(in srgb, var(--brand-2) 10%, var(--surface));
-		border-color: color-mix(in srgb, var(--brand-2) 35%, transparent);
-	}
-
-	.hero__panel {
-		padding: 1.5rem;
-		border-radius: 20px;
-		background: linear-gradient(
-			160deg,
-			color-mix(in srgb, var(--brand) 15%, var(--surface)) 0%,
-			color-mix(in srgb, var(--brand-2) 12%, var(--surface)) 100%
-		);
-		border: 1px solid color-mix(in srgb, var(--brand) 18%, var(--border) 82%);
-		box-shadow: var(--shadow-2);
-		display: grid;
-		gap: 0.75rem;
-		position: relative;
-		overflow: hidden;
-		animation: float 12s ease-in-out infinite;
-	}
-
-	.hero__panel::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background: radial-gradient(circle at 15% 15%, var(--glow), transparent 55%);
-		opacity: 0.8;
-		pointer-events: none;
-	}
-
-	.panel__top {
-		position: relative;
-		z-index: 1;
-		display: grid;
-		gap: 0.2rem;
-	}
-
-	.panel__stats {
-		position: relative;
-		z-index: 1;
-		list-style: none;
-		padding: 0;
-		margin: 0.25rem 0 0;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-		gap: 0.5rem;
-	}
-
-	.panel__stats li {
-		padding: 0.65rem 0.8rem;
-		border-radius: 14px;
-		background: color-mix(in srgb, var(--surface) 80%, transparent);
-		border: 1px solid color-mix(in srgb, var(--border) 60%, var(--brand) 40%);
-		box-shadow: var(--shadow-1);
-	}
-
-	.panel__stats strong {
-		display: block;
-		font-size: 1.35rem;
-	}
-
-	.panel__stats span {
-		color: var(--muted);
-		font-weight: 600;
-	}
-
-	.panel__stats small {
-		color: var(--muted);
-	}
-
-	.panel__tag {
-		position: relative;
-		z-index: 1;
-		margin: 0;
-		color: var(--muted);
-		font-size: 0.95rem;
-	}
-
-	.stat-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 1rem;
-	}
-
-	.stat-card {
-		padding: 1rem;
-		border-radius: 16px;
-		border: 1px solid var(--border);
-		background: var(--surface);
-		box-shadow: var(--shadow-1);
-		transition: transform 140ms ease, box-shadow 140ms ease;
-	}
-
-	.stat-card:hover {
-		transform: translateY(-4px);
-		box-shadow: var(--shadow-2);
-	}
-
-	.stat-card strong {
-		display: block;
-		font-size: 1.6rem;
-	}
-
-	.stat-card span {
-		color: var(--muted);
-	}
-
-	.schedule-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-		gap: 0.75rem;
-	}
-
-	.game-card {
-		padding: 1rem;
-		border-radius: 14px;
-		border: 1px solid var(--border);
-		background: color-mix(in srgb, var(--surface) 90%, var(--brand) 10%);
-		box-shadow: var(--shadow-1);
-		transition: transform 140ms ease, box-shadow 140ms ease;
-	}
-
-	.game-card:hover {
-		transform: translateY(-3px);
-		box-shadow: var(--shadow-2);
-	}
-
-	.game-card h3 {
-		margin: 0.15rem 0 0.35rem;
-	}
-
-	.game-card .sub {
-		margin: 0;
-		color: var(--muted);
-	}
-
-	.note {
-		margin: 0.4rem 0 0;
-		color: var(--ink);
-		font-weight: 600;
-	}
-
-	.extras {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-		gap: 0.85rem;
-	}
-
-	.highlight-card {
-		padding: 1rem;
-		border-radius: 16px;
-		border: 1px solid var(--border);
-		background: var(--surface);
-		box-shadow: var(--shadow-1);
-		display: grid;
-		gap: 0.4rem;
-	}
-
-	.highlight-card h3 {
-		margin: 0;
-	}
-
-	.highlight-card p {
-		margin: 0;
-	}
-
-	.footer {
-		border-top: 1px solid var(--border);
-		background: color-mix(in srgb, var(--surface) 90%, transparent);
-	}
-
-	.footer__inner {
+	.intro {
 		max-width: 1180px;
 		margin: 0 auto;
-		padding: 1.5rem 1.25rem 2rem;
-		display: flex;
-		justify-content: space-between;
-		gap: 1rem;
-		align-items: center;
-		flex-wrap: wrap;
-	}
-
-	.footer__links {
-		display: flex;
-		gap: 1rem;
-		align-items: center;
-	}
-
-	.footer__links a {
-		font-weight: 700;
-		color: var(--brand);
-	}
-
-	@keyframes float {
-		0%,
-		100% {
-			transform: translateY(0);
-		}
-		50% {
-			transform: translateY(-6px);
-		}
-	}
-
-	.tiny {
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		font-size: 0.78rem;
-		color: var(--muted);
-		margin: 0;
-		font-weight: 700;
+		padding: 1.4rem 1.25rem 0;
+		width: 100%;
 	}
 
 	.eyebrow {
-		margin: 0;
+		margin: 0 0 0.35rem;
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		font-size: 0.78rem;
+		font-weight: 700;
+		color: var(--brand);
 	}
 
-	.sub {
-		color: var(--muted);
+	h1 {
+		margin: 0;
+		font-size: clamp(2rem, 6vw, 4.25rem);
+		line-height: 0.95;
+		letter-spacing: -0.05em;
+		max-width: 12ch;
+	}
+
+	.lead {
+		max-width: 56ch;
+		margin: 0.85rem 0 0;
 	}
 
 	@media (max-width: 720px) {
-		.hero {
-			padding-inline: 1rem;
+		.landing {
+			min-height: auto;
 		}
 
-		.footer__inner {
-			align-items: flex-start;
+		.intro {
+			padding-inline: 1rem;
 		}
 	}
 </style>

@@ -1,0 +1,143 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navbar from '../../components/Navbar.astro';
+import { getBucksData } from '../../data/bucks';
+
+const { highlights } = await getBucksData();
+const baseUrl = import.meta.env.BASE_URL;
+---
+
+<Layout
+	title="Milwaukee Bucks | Identidad"
+	description="Pantalla dedicada a la narrativa visual y tactica del proyecto Bucks 25-26."
+>
+	<Navbar />
+	<main class="page">
+		<section class="hero">
+			<div>
+				<p class="eyebrow">Identidad</p>
+				<h1>Como contar a Milwaukee dentro del proyecto.</h1>
+				<p class="lead">
+					Esta ruta sirve para explicar el lenguaje del equipo: defensa, ataque y la capa emocional de
+					la marca Fear the Deer.
+				</p>
+			</div>
+			<a class="back-link" href={baseUrl}>Volver al portal</a>
+		</section>
+
+		<section class="identity-grid">
+			{highlights.map((item) => (
+				<article class="identity-card">
+					<span class="chip">{item.tag}</span>
+					<h2>{item.title}</h2>
+					<p>{item.copy}</p>
+				</article>
+			))}
+		</section>
+	</main>
+</Layout>
+
+<style>
+	.page {
+		max-width: 1180px;
+		margin: 0 auto;
+		padding: 1.5rem 1.25rem 3rem;
+		display: grid;
+		gap: 1.5rem;
+	}
+
+	.hero {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 1rem;
+		align-items: end;
+	}
+
+	.eyebrow {
+		margin: 0;
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		font-size: 0.78rem;
+		font-weight: 700;
+		color: var(--brand);
+	}
+
+	h1 {
+		margin: 0.2rem 0 0;
+		font-size: clamp(2rem, 5vw, 3.8rem);
+		line-height: 0.96;
+		letter-spacing: -0.05em;
+		max-width: 12ch;
+	}
+
+	h2 {
+		margin: 0;
+		font-size: clamp(1.45rem, 2vw, 2rem);
+		letter-spacing: -0.04em;
+	}
+
+	.lead {
+		max-width: 60ch;
+		margin: 0.8rem 0 0;
+	}
+
+	.back-link {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.85rem 1.1rem;
+		border-radius: 999px;
+		border: 1px solid var(--border);
+		background: var(--surface);
+		font-weight: 700;
+		box-shadow: var(--shadow-1);
+	}
+
+	.identity-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 1rem;
+	}
+
+	.identity-card {
+		padding: 1.35rem;
+		border-radius: 24px;
+		border: 1px solid var(--border);
+		background: linear-gradient(
+			150deg,
+			color-mix(in srgb, var(--surface) 94%, var(--brand) 6%),
+			color-mix(in srgb, var(--surface) 84%, var(--brand-2) 16%)
+		);
+		box-shadow: var(--shadow-1);
+		display: grid;
+		gap: 0.65rem;
+	}
+
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		width: fit-content;
+		padding: 0.35rem 0.7rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--brand) 12%, transparent);
+		border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent);
+		font-size: 0.82rem;
+		font-weight: 700;
+		color: var(--brand);
+	}
+
+	.identity-card p {
+		margin: 0;
+	}
+
+	@media (max-width: 720px) {
+		.page {
+			padding-inline: 1rem;
+		}
+
+		.hero {
+			grid-template-columns: 1fr;
+			align-items: start;
+		}
+	}
+</style>

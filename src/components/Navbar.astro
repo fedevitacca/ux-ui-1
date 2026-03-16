@@ -1,29 +1,17 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
 
-const links = [
-	{ href: '#top', label: 'Inicio' },
-	{ href: '#roster', label: 'Roster' },
-	{ href: '#schedule', label: 'Calendario' }
-];
+const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <header class="site-header">
 	<div class="inner">
-		<a class="brand" href="#top" aria-label="Volver al inicio">
+		<a class="brand" href={baseUrl} aria-label="Volver al portal">
 			<span class="brand__dot"></span>
 			<span class="brand__text">
 				Bucks <span class="sub">Catalog</span>
 			</span>
 		</a>
-
-		<nav aria-label="Secciones principales">
-			<ul>
-				{links.map((item) => (
-					<li><a href={item.href}>{item.label}</a></li>
-				))}
-			</ul>
-		</nav>
 
 		<div class="actions">
 			<a class="ghost" href="https://www.nba.com/bucks/tickets" target="_blank" rel="noreferrer">
@@ -48,8 +36,8 @@ const links = [
 		margin: 0 auto;
 		max-width: 1180px;
 		padding: 0.9rem 1.25rem;
-		display: grid;
-		grid-template-columns: auto 1fr auto;
+		display: flex;
+		justify-content: space-between;
 		align-items: center;
 		gap: 1.5rem;
 	}
@@ -76,32 +64,6 @@ const links = [
 		display: inline-block;
 		font-weight: 500;
 		color: var(--muted);
-	}
-
-	nav ul {
-		list-style: none;
-		display: flex;
-		align-items: center;
-		gap: 0.9rem;
-		margin: 0;
-		padding: 0;
-	}
-
-	nav a {
-		padding: 0.45rem 0.75rem;
-		border-radius: 12px;
-		font-weight: 600;
-		color: var(--muted);
-		border: 1px solid transparent;
-		transition: color 120ms ease, background 120ms ease, border-color 120ms ease,
-			transform 120ms ease;
-	}
-
-	nav a:hover {
-		color: var(--ink);
-		background: color-mix(in srgb, var(--glow) 50%, transparent);
-		border-color: var(--border);
-		transform: translateY(-1px);
 	}
 
 	.actions {
@@ -132,47 +94,17 @@ const links = [
 
 	@media (max-width: 960px) {
 		.inner {
-			grid-template-columns: 1fr;
-			grid-template-areas:
-				'brand actions'
-				'nav nav';
-			align-items: center;
-		}
-
-		.brand {
-			grid-area: brand;
-		}
-
-		.actions {
-			grid-area: actions;
-			justify-content: flex-end;
-		}
-
-		nav {
-			grid-area: nav;
-			overflow-x: auto;
-		}
-
-		nav ul {
-			justify-content: space-between;
+			gap: 0.9rem;
 		}
 	}
 
 	@media (max-width: 640px) {
 		.inner {
-			grid-template-columns: 1fr auto;
-			grid-template-areas:
-				'brand actions'
-				'nav nav';
+			padding-inline: 1rem;
 		}
 
-		nav ul {
-			gap: 0.5rem;
-		}
-
-		nav a {
-			padding: 0.4rem 0.6rem;
-			font-size: 0.95rem;
+		.brand__text .sub {
+			display: none;
 		}
 	}
 </style>
