@@ -36,6 +36,15 @@ const {
 	<body>
 		<div class="page-shell">
 			<slot />
+			<footer class="site-footer">
+				<div class="site-footer__inner">
+					<p>
+						Proyecto academico no oficial sobre Milwaukee Bucks. Los nombres de equipo, NBA y marcas
+						relacionadas pertenecen a sus respectivos titulares.
+					</p>
+					<p>Datos de referencia: ESPN, sitio oficial de Bucks y balldontlie. Diseno y desarrollo en Astro.</p>
+				</div>
+			</footer>
 		</div>
 	</body>
 </html>
@@ -47,6 +56,8 @@ const {
 			sans-serif;
 		--brand: #00471b;
 		--brand-2: #1d428a;
+		--black: #111111;
+		--white: #ffffff;
 		--cream: #f4eee2;
 		--ink: #0f1720;
 		--muted: #3f4b57;
@@ -116,6 +127,28 @@ const {
 		background-size: cover;
 	}
 
+	.site-footer {
+		margin-top: auto;
+		border-top: 1px solid color-mix(in srgb, var(--border) 84%, var(--brand) 16%);
+		background: color-mix(in srgb, var(--surface) 84%, var(--cream) 16%);
+		backdrop-filter: blur(10px);
+	}
+
+	.site-footer__inner {
+		max-width: 1120px;
+		margin: 0 auto;
+		padding: 1rem 1.25rem 1.2rem;
+		display: grid;
+		gap: 0.25rem;
+	}
+
+	.site-footer p {
+		margin: 0;
+		font-size: 0.86rem;
+		line-height: 1.5;
+		color: var(--muted);
+	}
+
 	button {
 		font-family: inherit;
 	}
@@ -124,5 +157,11 @@ const {
 		outline: 2px solid var(--brand-2);
 		outline-offset: 3px;
 		border-radius: 8px;
+	}
+
+	@media (max-width: 720px) {
+		.site-footer__inner {
+			padding-inline: 1rem;
+		}
 	}
 </style>

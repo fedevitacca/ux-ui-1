@@ -5,7 +5,7 @@ export interface NavItem {
 	eyebrow: string;
 	description: string;
 	meta: string;
-	accent?: 'green' | 'blue' | 'gold' | 'dark';
+	accent?: 'green' | 'blue' | 'blue-alt' | 'black';
 }
 
 interface Props {
@@ -35,22 +35,21 @@ const { items }: Props = Astro.props;
 	.portal-list {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		grid-template-rows: repeat(2, minmax(0, 1fr));
-		gap: 1rem;
+		grid-template-rows: repeat(2, auto);
+		gap: 0.9rem;
 		padding: 0 1.25rem 1.25rem;
-		max-width: 1280px;
+		max-width: 1120px;
 		margin: 0 auto 1.5rem;
 		width: 100%;
-		height: clamp(360px, calc(100vh - 240px), 560px);
 	}
 
 	.portal-card {
 		position: relative;
-		min-height: 0;
-		display: flex;
-		align-items: end;
-		padding: clamp(1rem, 2vw, 1.4rem);
-		border-radius: 28px;
+		min-height: 250px;
+		aspect-ratio: 1.75 / 1;
+		display: block;
+		padding: clamp(1rem, 2vw, 1.25rem);
+		border-radius: 24px;
 		overflow: hidden;
 		border: 1px solid color-mix(in srgb, var(--border) 72%, white 28%);
 		box-shadow: var(--shadow-2);
@@ -76,8 +75,10 @@ const { items }: Props = Astro.props;
 		position: relative;
 		z-index: 1;
 		display: grid;
-		gap: 0.7rem;
-		max-width: 620px;
+		grid-template-rows: auto auto 1fr auto;
+		gap: 0.45rem;
+		height: 100%;
+		max-width: 24ch;
 		color: #f3f7f0;
 	}
 
@@ -93,15 +94,16 @@ const { items }: Props = Astro.props;
 
 	h2 {
 		margin: 0;
-		font-size: clamp(1.8rem, 3.4vw, 3.2rem);
-		line-height: 0.95;
+		font-size: clamp(1.35rem, 2vw, 2.15rem);
+		line-height: 0.92;
 		letter-spacing: -0.05em;
+		max-width: 8ch;
 	}
 
 	.portal-card__description {
 		margin: 0;
-		max-width: 40ch;
-		font-size: clamp(0.92rem, 1vw, 1rem);
+		max-width: 24ch;
+		font-size: clamp(0.88rem, 0.9vw, 0.95rem);
 		color: rgba(243, 247, 240, 0.92);
 	}
 
@@ -110,18 +112,19 @@ const { items }: Props = Astro.props;
 		align-items: center;
 		justify-content: space-between;
 		gap: 1rem;
-		padding-top: 1rem;
+		padding-top: 0.4rem;
+		margin-top: auto;
 	}
 
 	.portal-card__footer strong {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.45rem;
-		padding: 0.7rem 0.95rem;
+		padding: 0.62rem 0.88rem;
 		border-radius: 999px;
 		background: rgba(255, 255, 255, 0.12);
 		backdrop-filter: blur(14px);
-		font-size: 0.95rem;
+		font-size: 0.9rem;
 	}
 
 	.accent-green {
@@ -136,27 +139,27 @@ const { items }: Props = Astro.props;
 			linear-gradient(135deg, #0b1833 0%, #274f96 46%, #081224 100%);
 	}
 
-	.accent-gold {
+	.accent-blue-alt {
 		background:
-			radial-gradient(circle at 78% 18%, rgba(255, 224, 163, 0.26), transparent 26%),
-			linear-gradient(135deg, #332106 0%, #8c5c14 48%, #221404 100%);
+			radial-gradient(circle at 78% 18%, rgba(125, 182, 255, 0.18), transparent 26%),
+			linear-gradient(135deg, #14233e 0%, #1d428a 46%, #091120 100%);
 	}
 
-	.accent-dark {
+	.accent-black {
 		background:
-			radial-gradient(circle at 80% 16%, rgba(170, 255, 212, 0.12), transparent 24%),
-			linear-gradient(135deg, #091118 0%, #23313e 52%, #04070b 100%);
+			radial-gradient(circle at 80% 16%, rgba(29, 66, 138, 0.18), transparent 24%),
+			linear-gradient(135deg, #0d1014 0%, #1f2631 52%, #050607 100%);
 	}
 
 	@media (max-width: 560px) {
 		.portal-list {
-			height: auto;
 			grid-template-columns: 1fr;
 			grid-template-rows: none;
 		}
 
 		.portal-card {
-			min-height: 220px;
+			min-height: 210px;
+			aspect-ratio: auto;
 		}
 	}
 
@@ -168,6 +171,10 @@ const { items }: Props = Astro.props;
 
 		.portal-card {
 			border-radius: 26px;
+		}
+
+		h2 {
+			max-width: none;
 		}
 
 		.portal-card__footer {

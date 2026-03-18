@@ -30,7 +30,7 @@ const navItems = [
 		eyebrow: 'Partidos',
 		description: 'Proximos juegos desde el 15 de marzo con contexto util para presentar cada cruce.',
 		meta: `${schedule.length} juegos`,
-		accent: 'gold'
+		accent: 'black'
 	},
 	{
 		href: `${baseUrl}identity/`,
@@ -38,7 +38,7 @@ const navItems = [
 		eyebrow: 'Narrativa',
 		description: 'Caracteristicas tacticas y visuales para darle tono al proyecto y defender la propuesta.',
 		meta: `${highlights.length} ejes`,
-		accent: 'dark'
+		accent: 'blue-alt'
 	}
 ];
 ---
@@ -51,16 +51,16 @@ const navItems = [
 	<main class="landing">
 		<section class="intro">
 			<p class="eyebrow">Milwaukee Bucks</p>
-			<h1>Elegi una vista y entra a una pantalla dedicada.</h1>
+			<h1>Bienvenido al catalogo de los Milwaukee Bucks</h1>
 			<p class="lead">
-				La home ahora funciona como portal. Cada card ocupa casi toda la pantalla y abre una ruta
-				distinta con la informacion desarrollada.
+				Aqui encontraras todo lo que debes saber de los Bucks encarando el fin de temporada. 
+				Roster, calendario y hasta su plan de juego para que estes al tanto y listo para verlo triunfar.
 			</p>
 		</section>
 
 		<SectionNavigator items={navItems} />
 	</main>
-</Layout>
+</Layout> 
 
 <style>
 	.landing {
@@ -71,9 +71,9 @@ const navItems = [
 	}
 
 	.intro {
-		max-width: 1180px;
+		max-width: 1120px;
 		margin: 0 auto;
-		padding: 1.4rem 1.25rem 0;
+		padding: 1.1rem 1.25rem 0;
 		width: 100%;
 	}
 
@@ -88,15 +88,15 @@ const navItems = [
 
 	h1 {
 		margin: 0;
-		font-size: clamp(2rem, 6vw, 4.25rem);
-		line-height: 0.95;
+		font-size: clamp(1.8rem, 5vw, 3.6rem);
+		line-height: 0.94;
 		letter-spacing: -0.05em;
-		max-width: 12ch;
+		max-width: 10ch;
 	}
 
 	.lead {
-		max-width: 56ch;
-		margin: 0.85rem 0 0;
+		max-width: 52ch;
+		margin: 0.7rem 0 0;
 	}
 
 	@media (max-width: 720px) {
