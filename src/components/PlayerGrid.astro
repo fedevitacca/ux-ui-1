@@ -103,6 +103,10 @@ const { players, positions }: Props = Astro.props;
 		align-items: end;
 	}
 
+	.filters > * {
+		min-width: 0;
+	}
+
 	.field {
 		display: flex;
 		flex-direction: column;
@@ -120,6 +124,7 @@ const { players, positions }: Props = Astro.props;
 		background: var(--surface);
 		color: var(--ink);
 		box-shadow: var(--shadow-1);
+		font-size: 16px;
 	}
 
 	button {
@@ -165,6 +170,16 @@ const { players, positions }: Props = Astro.props;
 
 	@media (max-width: 840px) {
 		.filters {
+			grid-template-columns: 1fr;
+		}
+
+		button {
+			width: 100%;
+		}
+	}
+
+	@media (max-width: 560px) {
+		.grid {
 			grid-template-columns: 1fr;
 		}
 	}

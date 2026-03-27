@@ -106,6 +106,7 @@ const {
 		background: var(--cream);
 		color: var(--ink);
 		letter-spacing: -0.01em;
+		overflow-x: clip;
 	}
 
 	a {
@@ -113,9 +114,27 @@ const {
 		text-decoration: none;
 	}
 
+	img,
+	svg,
+	video {
+		max-width: 100%;
+		height: auto;
+	}
+
 	p {
 		color: var(--muted);
 		line-height: 1.7;
+		text-wrap: pretty;
+	}
+
+	h1,
+	h2,
+	h3,
+	p,
+	a,
+	span,
+	dd {
+		overflow-wrap: anywhere;
 	}
 
 	.page-shell {
