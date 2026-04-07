@@ -1,7 +1,6 @@
 # Autoria del trabajo
 
 - Nombre completo: Federico Vitacca
-- Curso: no especificado
 
 # Milwaukee Bucks Portal 25-26
 
@@ -38,8 +37,6 @@ Los datos se resuelven desde `src/data/bucks.ts`. Si existe una API key de balld
 - `TypeScript` para tipado en la capa de datos.
 - `JavaScript` para la interactividad en cliente.
 - `Open Props` para normalizacion y tokens base de estilos.
-- `Google Fonts` con `Space Grotesk` como tipografia principal.
-- `balldontlie API` como fuente opcional de datos en vivo.
 
 ## Estructura principal
 
@@ -78,9 +75,6 @@ Esto levanta el proyecto en `http://localhost:4321`.
 ```bash
 npm run build
 ```
-
-El resultado se genera en la carpeta `dist/`.
-
 ### Vista previa del build
 
 ```bash
