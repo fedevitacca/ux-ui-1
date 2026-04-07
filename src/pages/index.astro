@@ -7,6 +7,15 @@ import { getBucksData } from '../data/bucks';
 const { players, schedule, highlights } = await getBucksData();
 const baseUrl = import.meta.env.BASE_URL;
 
+type NavItem = {
+	href: string;
+	label: string;
+	eyebrow: string;
+	description: string;
+	meta: string;
+	accent?: 'green' | 'blue' | 'blue-alt' | 'black';
+};
+
 const navItems = [
 	{
 		href: `${baseUrl}snapshot/`,
@@ -40,7 +49,7 @@ const navItems = [
 		meta: `${highlights.length} ejes`,
 		accent: 'blue-alt'
 	}
-];
+] satisfies NavItem[];
 ---
 
 <Layout
@@ -53,14 +62,14 @@ const navItems = [
 			<p class="eyebrow">Milwaukee Bucks</p>
 			<h1>Bienvenido al catalogo de los Milwaukee Bucks</h1>
 			<p class="lead">
-				Aqui encontraras todo lo que debes saber de los Bucks encarando el fin de temporada. 
+				Aqui encontraras todo lo que debes saber de los Bucks encarando el fin de temporada.
 				Roster, calendario y hasta su plan de juego para que estes al tanto y listo para verlo triunfar.
 			</p>
 		</section>
 
 		<SectionNavigator items={navItems} />
 	</main>
-</Layout> 
+</Layout>
 
 <style>
 	.landing {

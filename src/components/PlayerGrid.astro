@@ -45,48 +45,60 @@ const { players, positions }: Props = Astro.props;
 	<p class="empty" hidden>Sin resultados. Ajusta la busqueda o el filtro.</p>
 </div>
 
-<script client:load>
-	const container = document.querySelector('[data-roster]');
-	if (!container) return;
+<script is:inline>
+	(() => {
+		const initRosterFilters = () => {
+			const container = document.querySelector('[data-roster]');
+			if (!(container instanceof HTMLElement) || container.dataset.bound === 'true') return;
 
-	const searchInput = container.querySelector('#player-search');
-	const positionSelect = container.querySelector('#player-position');
-	const resetButton = container.querySelector('#reset-filters');
-	const emptyState = container.querySelector('.empty');
-	const cards = [...container.querySelectorAll('.player-card')].map((element) => ({
-		element,
-		name: element.dataset.name ?? '',
-		position: element.dataset.position ?? 'n/a'
-	}));
+			const searchInput = container.querySelector('#player-search');
+			const positionSelect = container.querySelector('#player-position');
+			const resetButton = container.querySelector('#reset-filters');
+			const emptyState = container.querySelector('.empty');
+			const cards = [...container.querySelectorAll('.player-card')].map((element) => ({
+				element,
+				name: element.dataset.name ?? '',
+				position: element.dataset.position ?? 'n/a'
+			}));
 
-	const applyFilters = () => {
-		const term = searchInput instanceof HTMLInputElement ? searchInput.value.trim().toLowerCase() : '';
-		const position =
-			positionSelect instanceof HTMLSelectElement ? positionSelect.value.toLowerCase() : 'all';
-		let visible = 0;
+			const applyFilters = () => {
+				const term =
+					searchInput instanceof HTMLInputElement ? searchInput.value.trim().toLowerCase() : '';
+				const position =
+					positionSelect instanceof HTMLSelectElement ? positionSelect.value.toLowerCase() : 'all';
+				let visible = 0;
 
-		cards.forEach((card) => {
-			const matchesTerm = card.name.includes(term);
-			const matchesPosition = position === 'all' || card.position === position;
-			const show = matchesTerm && matchesPosition;
-			card.element.classList.toggle('is-hidden', !show);
-			if (show) visible += 1;
-		});
+				cards.forEach((card) => {
+					const matchesTerm = card.name.includes(term);
+					const matchesPosition = position === 'all' || card.position === position;
+					const show = matchesTerm && matchesPosition;
+					card.element.classList.toggle('is-hidden', !show);
+					if (show) visible += 1;
+				});
 
-		if (emptyState instanceof HTMLElement) {
-			emptyState.hidden = visible !== 0;
+				if (emptyState instanceof HTMLElement) {
+					emptyState.hidden = visible !== 0;
+				}
+			};
+
+			searchInput?.addEventListener('input', applyFilters);
+			positionSelect?.addEventListener('change', applyFilters);
+			resetButton?.addEventListener('click', () => {
+				if (searchInput instanceof HTMLInputElement) searchInput.value = '';
+				if (positionSelect instanceof HTMLSelectElement) positionSelect.value = 'all';
+				applyFilters();
+			});
+
+			container.dataset.bound = 'true';
+			applyFilters();
+		};
+
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', initRosterFilters, { once: true });
+		} else {
+			initRosterFilters();
 		}
-	};
-
-	searchInput?.addEventListener('input', applyFilters);
-	positionSelect?.addEventListener('change', applyFilters);
-	resetButton?.addEventListener('click', () => {
-		if (searchInput instanceof HTMLInputElement) searchInput.value = '';
-		if (positionSelect instanceof HTMLSelectElement) positionSelect.value = 'all';
-		applyFilters();
-	});
-
-	applyFilters();
+	})();
 </script>
 
 <style>

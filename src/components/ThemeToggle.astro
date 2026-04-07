@@ -20,36 +20,48 @@
 	</button>
 </div>
 
-<script client:load>
-	const root = document.documentElement;
-	const instances = document.querySelectorAll('[data-theme-toggle]');
+<script is:inline>
+	(() => {
+		const initThemeToggles = () => {
+			const root = document.documentElement;
+			const instances = document.querySelectorAll('[data-theme-toggle]');
 
-	const setTheme = (theme) => {
-		root.dataset.theme = theme;
-		localStorage.setItem('theme', theme);
-	};
+			const setTheme = (theme) => {
+				root.dataset.theme = theme;
+				localStorage.setItem('theme', theme);
+			};
 
-	const init = (wrapper) => {
-		const button = wrapper.querySelector('button');
-		const label = wrapper.querySelector('[data-theme-label]');
+			instances.forEach((wrapper) => {
+				if (!(wrapper instanceof HTMLElement) || wrapper.dataset.bound === 'true') return;
 
-		const sync = () => {
-			const isDark = root.dataset.theme === 'dark';
-			label.textContent = isDark ? 'Modo claro' : 'Modo oscuro';
-			button.setAttribute('aria-pressed', String(isDark));
-			button.classList.toggle('is-dark', isDark);
+				const button = wrapper.querySelector('button');
+				const label = wrapper.querySelector('[data-theme-label]');
+				if (!(button instanceof HTMLButtonElement) || !(label instanceof HTMLElement)) return;
+
+				const sync = () => {
+					const isDark = root.dataset.theme === 'dark';
+					label.textContent = isDark ? 'Modo claro' : 'Modo oscuro';
+					button.setAttribute('aria-pressed', String(isDark));
+					button.classList.toggle('is-dark', isDark);
+				};
+
+				button.addEventListener('click', () => {
+					const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+					setTheme(next);
+					sync();
+				});
+
+				wrapper.dataset.bound = 'true';
+				sync();
+			});
 		};
 
-		button?.addEventListener('click', () => {
-			const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-			setTheme(next);
-			sync();
-		});
-
-		sync();
-	};
-
-	instances.forEach(init);
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', initThemeToggles, { once: true });
+		} else {
+			initThemeToggles();
+		}
+	})();
 </script>
 
 <style>
