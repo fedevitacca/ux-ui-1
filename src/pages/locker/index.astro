@@ -1,0 +1,645 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navbar from '../../components/Navbar.astro';
+
+const baseUrl = import.meta.env.BASE_URL;
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL ?? '';
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
+const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+---
+
+<Layout
+	title="Milwaukee Bucks | Locker"
+	description="Area serverless del catalogo Bucks con autenticacion y notas personales persistidas en Supabase."
+>
+	<Navbar />
+	<main class="page">
+		<section class="hero">
+			<div>
+				<p class="eyebrow">TP 2 Serverless</p>
+				<h1>Locker personal del catalogo Bucks.</h1>
+				<p class="lead">
+					Registrate, inicia sesion y guarda tus propios apuntes de scouting sobre jugadores,
+					partidos o decisiones del equipo. Cada registro queda asociado a tu usuario.
+				</p>
+			</div>
+			<a class="back-link" href={baseUrl}>Volver al portal</a>
+		</section>
+
+		{
+			!isConfigured && (
+				<section class="setup-warning" aria-live="polite">
+					<strong>Falta configurar Supabase.</strong>
+					<span>
+						Carga PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY para activar autenticacion y base
+						de datos en la nube.
+					</span>
+				</section>
+			)
+		}
+
+		<section
+			class="locker-app"
+			data-locker
+			data-supabase-url={supabaseUrl}
+			data-supabase-key={supabaseAnonKey}
+		>
+			<div class="auth-panel">
+				<div class="panel-heading">
+					<p class="mini-eyebrow">Cuenta</p>
+					<h2>Acceso de usuario</h2>
+				</div>
+
+				<form class="auth-form" data-auth-form>
+					<label class="field">
+						<span>Email</span>
+						<input type="email" name="email" placeholder="tu@email.com" autocomplete="email" required />
+					</label>
+					<label class="field">
+						<span>Clave</span>
+						<input
+							type="password"
+							name="password"
+							placeholder="Minimo 6 caracteres"
+							autocomplete="current-password"
+							minlength="6"
+							required
+						/>
+					</label>
+					<div class="auth-actions">
+						<button type="submit" data-auth-action="signin">Iniciar sesion</button>
+						<button type="button" class="secondary" data-auth-action="signup">Registrarme</button>
+					</div>
+				</form>
+
+				<div class="session-card" data-session-card hidden>
+					<p>Sesion activa</p>
+					<strong data-user-email></strong>
+					<button type="button" class="secondary" data-auth-action="signout">Cerrar sesion</button>
+				</div>
+
+				<p class="status" data-status role="status"></p>
+			</div>
+
+			<div class="crud-panel">
+				<div class="panel-heading">
+					<p class="mini-eyebrow">Base de datos</p>
+					<h2>Apuntes del locker</h2>
+				</div>
+
+				<form class="note-form" data-note-form>
+					<input type="hidden" name="id" />
+					<div class="form-grid">
+						<label class="field">
+							<span>Entidad</span>
+							<select name="entity_type">
+								<option value="Jugador">Jugador</option>
+								<option value="Partido">Partido</option>
+								<option value="Equipo">Equipo</option>
+							</select>
+						</label>
+						<label class="field">
+							<span>Nombre</span>
+							<input type="text" name="entity_name" placeholder="Giannis, Celtics, rotacion..." required />
+						</label>
+						<label class="field">
+							<span>Estado</span>
+							<select name="status">
+								<option value="Observacion">Observacion</option>
+								<option value="Favorito">Favorito</option>
+								<option value="Revisar">Revisar</option>
+							</select>
+						</label>
+					</div>
+					<label class="field">
+						<span>Titulo</span>
+						<input type="text" name="title" placeholder="Lectura rapida del apunte" required />
+					</label>
+					<label class="field">
+						<span>Detalle</span>
+						<textarea
+							name="body"
+							rows="4"
+							placeholder="Escribe el analisis, dato o seguimiento que quieras guardar."
+							required></textarea>
+					</label>
+					<div class="note-actions">
+						<button type="submit">Guardar apunte</button>
+						<button type="button" class="secondary" data-reset-note>Nuevo</button>
+					</div>
+				</form>
+
+				<div class="notes-toolbar">
+					<p><span data-note-count>0</span> apuntes guardados</p>
+					<button type="button" class="secondary" data-refresh-notes>Actualizar</button>
+				</div>
+
+				<div class="notes-list" data-notes-list>
+					<p class="empty">Inicia sesion para cargar tus apuntes personales.</p>
+				</div>
+			</div>
+		</section>
+	</main>
+</Layout>
+
+<script is:inline>
+	(() => {
+		const container = document.querySelector('[data-locker]');
+		if (!(container instanceof HTMLElement)) return;
+
+		const supabaseUrl = container.dataset.supabaseUrl || '';
+		const supabaseKey = container.dataset.supabaseKey || '';
+		const authForm = container.querySelector('[data-auth-form]');
+		const noteForm = container.querySelector('[data-note-form]');
+		const statusEl = container.querySelector('[data-status]');
+		const sessionCard = container.querySelector('[data-session-card]');
+		const userEmail = container.querySelector('[data-user-email]');
+		const notesList = container.querySelector('[data-notes-list]');
+		const noteCount = container.querySelector('[data-note-count]');
+		const storageKey = 'bucks-locker-session';
+		let session = null;
+
+		const setStatus = (message, tone = 'neutral') => {
+			if (!(statusEl instanceof HTMLElement)) return;
+			statusEl.textContent = message;
+			statusEl.dataset.tone = tone;
+		};
+
+		const headers = (token) => ({
+			apikey: supabaseKey,
+			Authorization: `Bearer ${token || supabaseKey}`,
+			'Content-Type': 'application/json'
+		});
+
+		const escapeHtml = (value) =>
+			String(value ?? '').replace(/[&<>"']/g, (char) => {
+				const entities = {
+					'&': '&amp;',
+					'<': '&lt;',
+					'>': '&gt;',
+					'"': '&quot;',
+					"'": '&#039;'
+				};
+				return entities[char];
+			});
+
+		const request = async (path, options = {}) => {
+			if (!supabaseUrl || !supabaseKey) {
+				throw new Error('Supabase no esta configurado.');
+			}
+
+			const response = await fetch(`${supabaseUrl}${path}`, options);
+			const text = await response.text();
+			const payload = text ? JSON.parse(text) : null;
+
+			if (!response.ok) {
+				throw new Error(payload?.msg || payload?.message || payload?.error_description || 'Error inesperado');
+			}
+
+			return payload;
+		};
+
+		const saveSession = (nextSession) => {
+			session = nextSession;
+			if (nextSession) {
+				localStorage.setItem(storageKey, JSON.stringify(nextSession));
+			} else {
+				localStorage.removeItem(storageKey);
+			}
+			renderSession();
+		};
+
+		const renderSession = () => {
+			const authenticated = Boolean(session?.access_token && session?.user?.id);
+			if (authForm instanceof HTMLElement) authForm.hidden = authenticated;
+			if (sessionCard instanceof HTMLElement) sessionCard.hidden = !authenticated;
+			if (userEmail instanceof HTMLElement) userEmail.textContent = session?.user?.email || '';
+			if (noteForm instanceof HTMLFormElement) {
+				[...noteForm.elements].forEach((element) => {
+					if (element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement || element instanceof HTMLButtonElement) {
+						element.disabled = !authenticated;
+					}
+				});
+			}
+		};
+
+		const auth = async (mode) => {
+			if (!(authForm instanceof HTMLFormElement)) return;
+			const formData = new FormData(authForm);
+			const email = String(formData.get('email') || '').trim();
+			const password = String(formData.get('password') || '');
+			const path = mode === 'signup' ? '/auth/v1/signup' : '/auth/v1/token?grant_type=password';
+
+			const payload = await request(path, {
+				method: 'POST',
+				headers: headers(),
+				body: JSON.stringify({ email, password })
+			});
+
+			if (payload.access_token) {
+				saveSession(payload);
+				setStatus('Sesion iniciada. Ya podes guardar apuntes.', 'success');
+				await loadNotes();
+			} else {
+				setStatus('Usuario registrado. Revisa tu email si Supabase pide confirmacion.', 'success');
+			}
+		};
+
+		const signOut = async () => {
+			if (session?.access_token) {
+				await request('/auth/v1/logout', {
+					method: 'POST',
+					headers: headers(session.access_token)
+				}).catch(() => null);
+			}
+			saveSession(null);
+			resetNoteForm();
+			renderNotes([]);
+			setStatus('Sesion cerrada.', 'neutral');
+		};
+
+		const loadNotes = async () => {
+			if (!session?.access_token || !session?.user?.id) return;
+			const query = `/rest/v1/bucks_notes?select=*&user_id=eq.${session.user.id}&order=updated_at.desc`;
+			const notes = await request(query, { headers: headers(session.access_token) });
+			renderNotes(notes || []);
+		};
+
+		const saveNote = async () => {
+			if (!(noteForm instanceof HTMLFormElement) || !session?.access_token || !session?.user?.id) return;
+			const formData = new FormData(noteForm);
+			const id = String(formData.get('id') || '');
+			const body = {
+				user_id: session.user.id,
+				entity_type: String(formData.get('entity_type') || 'Jugador'),
+				entity_name: String(formData.get('entity_name') || '').trim(),
+				status: String(formData.get('status') || 'Observacion'),
+				title: String(formData.get('title') || '').trim(),
+				body: String(formData.get('body') || '').trim(),
+				updated_at: new Date().toISOString()
+			};
+
+			if (id) {
+				await request(`/rest/v1/bucks_notes?id=eq.${id}&user_id=eq.${session.user.id}`, {
+					method: 'PATCH',
+					headers: { ...headers(session.access_token), Prefer: 'return=minimal' },
+					body: JSON.stringify(body)
+				});
+				setStatus('Apunte actualizado.', 'success');
+			} else {
+				await request('/rest/v1/bucks_notes', {
+					method: 'POST',
+					headers: { ...headers(session.access_token), Prefer: 'return=minimal' },
+					body: JSON.stringify(body)
+				});
+				setStatus('Apunte creado.', 'success');
+			}
+
+			resetNoteForm();
+			await loadNotes();
+		};
+
+		const deleteNote = async (id) => {
+			if (!session?.access_token || !session?.user?.id) return;
+			await request(`/rest/v1/bucks_notes?id=eq.${id}&user_id=eq.${session.user.id}`, {
+				method: 'DELETE',
+				headers: headers(session.access_token)
+			});
+			setStatus('Apunte eliminado.', 'success');
+			await loadNotes();
+		};
+
+		const resetNoteForm = () => {
+			if (!(noteForm instanceof HTMLFormElement)) return;
+			noteForm.reset();
+			const idInput = noteForm.elements.namedItem('id');
+			if (idInput instanceof HTMLInputElement) idInput.value = '';
+		};
+
+		const renderNotes = (notes) => {
+			if (noteCount instanceof HTMLElement) noteCount.textContent = String(notes.length);
+			if (!(notesList instanceof HTMLElement)) return;
+
+			if (!session) {
+				notesList.innerHTML = '<p class="empty">Inicia sesion para cargar tus apuntes personales.</p>';
+				return;
+			}
+
+			if (!notes.length) {
+				notesList.innerHTML = '<p class="empty">Todavia no guardaste apuntes en tu locker.</p>';
+				return;
+			}
+
+			notesList.innerHTML = notes
+				.map(
+					(note) => `
+						<article class="note-card" data-note-id="${escapeHtml(note.id)}">
+							<div>
+								<p class="note-meta">${escapeHtml(note.entity_type)} / ${escapeHtml(note.status)}</p>
+								<h3>${escapeHtml(note.title)}</h3>
+								<strong>${escapeHtml(note.entity_name)}</strong>
+								<p>${escapeHtml(note.body)}</p>
+							</div>
+							<div class="note-card__actions">
+								<button type="button" class="secondary" data-edit-note>Editar</button>
+								<button type="button" class="danger" data-delete-note>Eliminar</button>
+							</div>
+						</article>`
+				)
+				.join('');
+
+			notesList.querySelectorAll('[data-note-id]').forEach((card) => {
+				const note = notes.find((item) => item.id === card.getAttribute('data-note-id'));
+				card.querySelector('[data-edit-note]')?.addEventListener('click', () => {
+					if (!(noteForm instanceof HTMLFormElement) || !note) return;
+					noteForm.elements.namedItem('id').value = note.id;
+					noteForm.elements.namedItem('entity_type').value = note.entity_type;
+					noteForm.elements.namedItem('entity_name').value = note.entity_name;
+					noteForm.elements.namedItem('status').value = note.status;
+					noteForm.elements.namedItem('title').value = note.title;
+					noteForm.elements.namedItem('body').value = note.body;
+					noteForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				});
+				card.querySelector('[data-delete-note]')?.addEventListener('click', () => {
+					if (note?.id) deleteNote(note.id).catch((error) => setStatus(error.message, 'error'));
+				});
+			});
+		};
+
+		container.addEventListener('click', (event) => {
+			const target = event.target;
+			if (!(target instanceof HTMLElement)) return;
+			const action = target.getAttribute('data-auth-action');
+			if (action === 'signup' || action === 'signin') {
+				auth(action).catch((error) => setStatus(error.message, 'error'));
+			}
+			if (action === 'signout') {
+				signOut().catch((error) => setStatus(error.message, 'error'));
+			}
+			if (target.matches('[data-reset-note]')) resetNoteForm();
+			if (target.matches('[data-refresh-notes]')) {
+				loadNotes().catch((error) => setStatus(error.message, 'error'));
+			}
+		});
+
+		authForm?.addEventListener('submit', (event) => {
+			event.preventDefault();
+			auth('signin').catch((error) => setStatus(error.message, 'error'));
+		});
+
+		noteForm?.addEventListener('submit', (event) => {
+			event.preventDefault();
+			saveNote().catch((error) => setStatus(error.message, 'error'));
+		});
+
+		try {
+			const stored = localStorage.getItem(storageKey);
+			if (stored) session = JSON.parse(stored);
+		} catch {
+			session = null;
+		}
+		renderSession();
+		if (session) {
+			loadNotes().catch((error) => {
+				saveSession(null);
+				setStatus(error.message, 'error');
+			});
+		} else {
+			renderNotes([]);
+		}
+	})();
+</script>
+
+<style>
+	.page {
+		max-width: 1180px;
+		margin: 0 auto;
+		padding: 1.5rem 1.25rem 3rem;
+		display: grid;
+		gap: 1.25rem;
+	}
+
+	.hero {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 1rem;
+		align-items: end;
+	}
+
+	.eyebrow,
+	.mini-eyebrow,
+	.note-meta {
+		margin: 0;
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		font-size: 0.76rem;
+		font-weight: 700;
+		color: var(--brand);
+	}
+
+	h1,
+	h2,
+	h3 {
+		margin: 0;
+		line-height: 1;
+	}
+
+	h1 {
+		font-size: clamp(2rem, 5vw, 3.8rem);
+		letter-spacing: -0.05em;
+		max-width: 12ch;
+	}
+
+	.lead {
+		max-width: 66ch;
+		margin: 0.8rem 0 0;
+	}
+
+	.back-link,
+	button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.85rem 1rem;
+		border-radius: 14px;
+		border: 1px solid color-mix(in srgb, var(--brand-2) 35%, var(--border) 65%);
+		background: color-mix(in srgb, var(--brand) 14%, var(--surface) 86%);
+		color: var(--ink);
+		font-weight: 700;
+		cursor: pointer;
+		box-shadow: var(--shadow-1);
+	}
+
+	button:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+	}
+
+	.secondary {
+		background: var(--surface);
+		border-color: var(--border);
+	}
+
+	.danger {
+		background: color-mix(in srgb, #b42318 16%, var(--surface) 84%);
+		border-color: color-mix(in srgb, #b42318 38%, var(--border) 62%);
+	}
+
+	.setup-warning,
+	.auth-panel,
+	.crud-panel {
+		border: 1px solid var(--border);
+		background: color-mix(in srgb, var(--surface) 92%, transparent);
+		box-shadow: var(--shadow-1);
+	}
+
+	.setup-warning {
+		display: grid;
+		gap: 0.25rem;
+		padding: 1rem;
+		border-radius: 16px;
+	}
+
+	.locker-app {
+		display: grid;
+		grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.3fr);
+		gap: 1rem;
+		align-items: start;
+	}
+
+	.auth-panel,
+	.crud-panel {
+		border-radius: 24px;
+		padding: 1.15rem;
+		display: grid;
+		gap: 1rem;
+	}
+
+	.panel-heading {
+		display: grid;
+		gap: 0.3rem;
+	}
+
+	.auth-form,
+	.note-form,
+	.session-card {
+		display: grid;
+		gap: 0.85rem;
+	}
+
+	.form-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.75rem;
+	}
+
+	.field {
+		display: grid;
+		gap: 0.35rem;
+		font-weight: 700;
+		color: var(--muted);
+	}
+
+	input,
+	select,
+	textarea {
+		width: 100%;
+		border: 1px solid var(--border);
+		border-radius: 14px;
+		background: var(--surface);
+		color: var(--ink);
+		font: inherit;
+		font-size: 16px;
+		padding: 0.78rem 0.9rem;
+		box-shadow: var(--shadow-1);
+	}
+
+	textarea {
+		resize: vertical;
+		min-height: 120px;
+	}
+
+	.auth-actions,
+	.note-actions,
+	.notes-toolbar,
+	.note-card__actions {
+		display: flex;
+		gap: 0.65rem;
+		flex-wrap: wrap;
+		align-items: center;
+	}
+
+	.notes-toolbar {
+		justify-content: space-between;
+		border-top: 1px solid var(--border);
+		padding-top: 0.85rem;
+	}
+
+	.notes-toolbar p,
+	.status {
+		margin: 0;
+	}
+
+	.status[data-tone='success'] {
+		color: var(--brand);
+	}
+
+	.status[data-tone='error'] {
+		color: #b42318;
+	}
+
+	.session-card,
+	.note-card,
+	.empty {
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		background: color-mix(in srgb, var(--surface) 84%, var(--cream) 16%);
+		padding: 1rem;
+	}
+
+	.session-card p,
+	.empty {
+		margin: 0;
+	}
+
+	.notes-list {
+		display: grid;
+		gap: 0.85rem;
+	}
+
+	.note-card {
+		display: grid;
+		gap: 0.9rem;
+	}
+
+	.note-card strong {
+		display: block;
+		margin-top: 0.35rem;
+		color: var(--brand-2);
+	}
+
+	.note-card p:last-child {
+		margin-bottom: 0;
+	}
+
+	@media (max-width: 860px) {
+		.hero,
+		.locker-app,
+		.form-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 560px) {
+		.page {
+			padding-inline: 1rem;
+		}
+
+		.auth-actions > *,
+		.note-actions > *,
+		.notes-toolbar > *,
+		.note-card__actions > * {
+			width: 100%;
+		}
+	}
+</style>

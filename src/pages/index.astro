@@ -18,12 +18,20 @@ type NavItem = {
 
 const navItems = [
 	{
+		href: `${baseUrl}locker/`,
+		label: 'Locker',
+		eyebrow: 'Serverless',
+		description: 'Registro, login y apuntes personales del catalogo Bucks persistidos en Supabase.',
+		meta: 'TP 2',
+		accent: 'green'
+	},
+	{
 		href: `${baseUrl}snapshot/`,
 		label: 'Snapshot',
 		eyebrow: 'Radiografia',
 		description: 'Estado de la temporada, lectura del momento Bucks y resumen rapido del contexto competitivo.',
 		meta: 'Resumen ejecutivo',
-		accent: 'green'
+		accent: 'blue'
 	},
 	{
 		href: `${baseUrl}roster/`,
@@ -31,7 +39,7 @@ const navItems = [
 		eyebrow: 'Plantel',
 		description: 'Todos los jugadores en una pagina dedicada con filtros, datos fisicos, edad y salario.',
 		meta: `${players.length} jugadores`,
-		accent: 'blue'
+		accent: 'blue-alt'
 	},
 	{
 		href: `${baseUrl}schedule/`,
@@ -47,7 +55,7 @@ const navItems = [
 		eyebrow: 'Narrativa',
 		description: 'Caracteristicas tacticas y visuales para darle tono al proyecto y defender la propuesta.',
 		meta: `${highlights.length} ejes`,
-		accent: 'blue-alt'
+		accent: 'green'
 	}
 ] satisfies NavItem[];
 ---
@@ -63,7 +71,8 @@ const navItems = [
 			<h1>Bienvenido al catalogo de los Milwaukee Bucks</h1>
 			<p class="lead">
 				Aqui encontraras todo lo que debes saber de los Bucks encarando el fin de temporada.
-				Roster, calendario y hasta su plan de juego para que estes al tanto y listo para verlo triunfar.
+				Roster, calendario, plan de juego y un locker personal con login para guardar tus propios
+				apuntes del catalogo.
 			</p>
 		</section>
 
