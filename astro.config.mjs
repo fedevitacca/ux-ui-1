@@ -1,9 +1,12 @@
 // @ts-check
+import vercel from '@astrojs/vercel';
 import { defineConfig } from 'astro/config';
 import { fileURLToPath } from 'node:url';
 
 // https://astro.build/config
 export default defineConfig({
+	output: 'server',
+	adapter: vercel(),
 	vite: {
 		resolve: {
 			alias: {
