@@ -32,7 +32,7 @@ export interface Highlight {
 const BUCKS_ID = 17;
 const SEASON = 2025;
 const API_KEY = import.meta.env.BALLDONTLIE_API_KEY;
-const API_BASE = API_KEY ? 'https://api.balldontlie.io/v1' : 'https://www.balldontlie.io/api/v1';
+const API_BASE = 'https://api.balldontlie.io/v1';
 const AUTH_HEADERS = API_KEY ? { Authorization: `Bearer ${API_KEY}` } : {};
 
 export const fallbackPlayers: Player[] = [
@@ -271,6 +271,8 @@ export const highlights: Highlight[] = [
 ];
 
 const safeFetch = async (url: string) => {
+	if (!API_KEY) return null;
+
 	try {
 		const response = await fetch(url, { headers: AUTH_HEADERS });
 		if (!response.ok) {
