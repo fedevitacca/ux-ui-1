@@ -18,7 +18,7 @@ La aplicacion funciona como un catalogo tematico construido con Astro. La home a
 - `Schedule`: proximos partidos con rival, fecha, sede y contexto.
 - `Identity`: explicacion narrativa y visual del estilo del equipo.
 
-Los datos generales se resuelven desde `src/data/bucks.ts`. Si existe una API key de balldontlie, el proyecto intenta cargar roster y calendario desde la API; si no, usa datos fallback definidos localmente para mantener el sitio funcional. La persistencia del `Locker` usa Supabase Auth y Supabase Database a traves de endpoints REST, actuando como backend serverless.
+Los datos generales se resuelven desde `src/data/bucks.ts`. Si existe una API key de balldontlie, el proyecto intenta cargar roster y calendario desde la API; si no, usa datos fallback definidos localmente para mantener el sitio funcional. La persistencia del `Locker` usa endpoints serverless de Astro desplegables en Vercel y una base PostgreSQL en Neon.
 
 ## Items que resuelve el trabajo de la consigna
 
@@ -27,9 +27,9 @@ Los datos generales se resuelven desde `src/data/bucks.ts`. Si existe una API ke
 - Implementacion de componentes reutilizables en Astro.
 - Uso de estilos personalizados con layout global, tarjetas y navegacion.
 - Interactividad con JavaScript del lado del cliente.
-- Registro de usuario, inicio de sesion y cierre de sesion con Supabase Auth.
+- Registro de usuario, inicio de sesion y cierre de sesion con endpoints serverless propios.
 - CRUD de apuntes Bucks asociados al usuario autenticado.
-- Persistencia de los apuntes en una tabla cloud de Supabase.
+- Persistencia de usuarios y apuntes en una base cloud de Neon.
 - Filtro de jugadores por nombre y posicion en la vista de roster.
 - Cambio de tema claro/oscuro con persistencia en `localStorage`.
 - Consumo de datos externos con fallback local para garantizar funcionamiento.
@@ -40,7 +40,8 @@ Los datos generales se resuelven desde `src/data/bucks.ts`. Si existe una API ke
 - `Astro 6` como framework principal.
 - `TypeScript` para tipado en la capa de datos.
 - `JavaScript` para la interactividad en cliente.
-- `Supabase` como backend serverless para autenticacion y base de datos.
+- `Neon` como base PostgreSQL cloud.
+- `Astro API routes` y `@astrojs/vercel` como backend serverless.
 - `Open Props` para normalizacion y tokens base de estilos.
 
 ## Estructura principal
@@ -76,49 +77,25 @@ npm run dev
 
 Esto levanta el proyecto en `http://localhost:4321`.
 
-## Configuracion de Supabase
+## Configuracion de Neon
 
-Crear un archivo `.env` local con:
+Crear un archivo `.env` local tomando como base `.env.example`:
 
 ```bash
-PUBLIC_SUPABASE_URL=https://TU-PROYECTO.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=TU_ANON_KEY
+DATABASE_URL=postgresql://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require
+AUTH_SECRET=cambia-esto-por-un-string-largo-y-aleatorio
 ```
 
-Tabla sugerida para el CRUD del `Locker`:
+En Neon, abrir el SQL Editor y ejecutar el contenido de `docs/neon-schema.sql`:
 
 ```sql
-create table public.bucks_notes (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  entity_type text not null,
-  entity_name text not null,
-  status text not null default 'Observacion',
-  title text not null,
-  body text not null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
+create extension if not exists pgcrypto;
 
-alter table public.bucks_notes enable row level security;
-
-create policy "users can read their notes"
-on public.bucks_notes for select
-using (auth.uid() = user_id);
-
-create policy "users can insert their notes"
-on public.bucks_notes for insert
-with check (auth.uid() = user_id);
-
-create policy "users can update their notes"
-on public.bucks_notes for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
-
-create policy "users can delete their notes"
-on public.bucks_notes for delete
-using (auth.uid() = user_id);
+create table if not exists public.bucks_users (...);
+create table if not exists public.bucks_notes (...);
 ```
+
+La autenticacion se resuelve desde el backend serverless del proyecto. Las claves de Neon quedan solo del lado servidor mediante `DATABASE_URL`; no se exponen al navegador.
 
 ### Build de produccion
 

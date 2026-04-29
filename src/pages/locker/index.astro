@@ -3,14 +3,11 @@ import Layout from '../../layouts/Layout.astro';
 import Navbar from '../../components/Navbar.astro';
 
 const baseUrl = import.meta.env.BASE_URL;
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL ?? '';
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '';
-const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 ---
 
 <Layout
 	title="Milwaukee Bucks | Locker"
-	description="Area serverless del catalogo Bucks con autenticacion y notas personales persistidas en Supabase."
+	description="Area serverless del catalogo Bucks con autenticacion propia y notas personales persistidas en Neon."
 >
 	<Navbar />
 	<main class="page">
@@ -26,24 +23,15 @@ const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 			<a class="back-link" href={baseUrl}>Volver al portal</a>
 		</section>
 
-		{
-			!isConfigured && (
-				<section class="setup-warning" aria-live="polite">
-					<strong>Falta configurar Supabase.</strong>
-					<span>
-						Carga PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY para activar autenticacion y base
-						de datos en la nube.
-					</span>
-				</section>
-			)
-		}
+		<section class="setup-warning" aria-live="polite">
+			<strong>Backend serverless con Neon</strong>
+			<span>
+				Para activar el locker en local o Vercel se usan DATABASE_URL y AUTH_SECRET. El SQL esta
+				documentado en README.md.
+			</span>
+		</section>
 
-		<section
-			class="locker-app"
-			data-locker
-			data-supabase-url={supabaseUrl}
-			data-supabase-key={supabaseAnonKey}
-		>
+		<section class="locker-app" data-locker>
 			<div class="auth-panel">
 				<div class="panel-heading">
 					<p class="mini-eyebrow">Cuenta</p>
@@ -147,8 +135,6 @@ const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 		const container = document.querySelector('[data-locker]');
 		if (!(container instanceof HTMLElement)) return;
 
-		const supabaseUrl = container.dataset.supabaseUrl || '';
-		const supabaseKey = container.dataset.supabaseKey || '';
 		const authForm = container.querySelector('[data-auth-form]');
 		const noteForm = container.querySelector('[data-note-form]');
 		const statusEl = container.querySelector('[data-status]');
@@ -166,8 +152,7 @@ const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 		};
 
 		const headers = (token) => ({
-			apikey: supabaseKey,
-			Authorization: `Bearer ${token || supabaseKey}`,
+			...(token ? { Authorization: `Bearer ${token}` } : {}),
 			'Content-Type': 'application/json'
 		});
 
@@ -184,16 +169,12 @@ const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 			});
 
 		const request = async (path, options = {}) => {
-			if (!supabaseUrl || !supabaseKey) {
-				throw new Error('Supabase no esta configurado.');
-			}
-
-			const response = await fetch(`${supabaseUrl}${path}`, options);
+			const response = await fetch(path, options);
 			const text = await response.text();
 			const payload = text ? JSON.parse(text) : null;
 
 			if (!response.ok) {
-				throw new Error(payload?.msg || payload?.message || payload?.error_description || 'Error inesperado');
+				throw new Error(payload?.message || 'Error inesperado');
 			}
 
 			return payload;
@@ -228,7 +209,7 @@ const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 			const formData = new FormData(authForm);
 			const email = String(formData.get('email') || '').trim();
 			const password = String(formData.get('password') || '');
-			const path = mode === 'signup' ? '/auth/v1/signup' : '/auth/v1/token?grant_type=password';
+			const path = mode === 'signup' ? '/api/auth/register' : '/api/auth/login';
 
 			const payload = await request(path, {
 				method: 'POST',
@@ -241,17 +222,11 @@ const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 				setStatus('Sesion iniciada. Ya podes guardar apuntes.', 'success');
 				await loadNotes();
 			} else {
-				setStatus('Usuario registrado. Revisa tu email si Supabase pide confirmacion.', 'success');
+				setStatus('Usuario registrado. Ya podes iniciar sesion.', 'success');
 			}
 		};
 
 		const signOut = async () => {
-			if (session?.access_token) {
-				await request('/auth/v1/logout', {
-					method: 'POST',
-					headers: headers(session.access_token)
-				}).catch(() => null);
-			}
 			saveSession(null);
 			resetNoteForm();
 			renderNotes([]);
@@ -260,8 +235,7 @@ const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 		const loadNotes = async () => {
 			if (!session?.access_token || !session?.user?.id) return;
-			const query = `/rest/v1/bucks_notes?select=*&user_id=eq.${session.user.id}&order=updated_at.desc`;
-			const notes = await request(query, { headers: headers(session.access_token) });
+			const notes = await request('/api/notes', { headers: headers(session.access_token) });
 			renderNotes(notes || []);
 		};
 
@@ -280,16 +254,16 @@ const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 			};
 
 			if (id) {
-				await request(`/rest/v1/bucks_notes?id=eq.${id}&user_id=eq.${session.user.id}`, {
+				await request(`/api/notes/${encodeURIComponent(id)}`, {
 					method: 'PATCH',
-					headers: { ...headers(session.access_token), Prefer: 'return=minimal' },
+					headers: headers(session.access_token),
 					body: JSON.stringify(body)
 				});
 				setStatus('Apunte actualizado.', 'success');
 			} else {
-				await request('/rest/v1/bucks_notes', {
+				await request('/api/notes', {
 					method: 'POST',
-					headers: { ...headers(session.access_token), Prefer: 'return=minimal' },
+					headers: headers(session.access_token),
 					body: JSON.stringify(body)
 				});
 				setStatus('Apunte creado.', 'success');
@@ -301,7 +275,7 @@ const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 		const deleteNote = async (id) => {
 			if (!session?.access_token || !session?.user?.id) return;
-			await request(`/rest/v1/bucks_notes?id=eq.${id}&user_id=eq.${session.user.id}`, {
+			await request(`/api/notes/${encodeURIComponent(id)}`, {
 				method: 'DELETE',
 				headers: headers(session.access_token)
 			});
