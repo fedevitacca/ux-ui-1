@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless';
+import { getServerEnv } from './env';
 
-const databaseUrl = process.env.DATABASE_URL ?? import.meta.env.DATABASE_URL ?? '';
+const databaseUrl = getServerEnv('DATABASE_URL');
 
 export const sql = databaseUrl ? neon(databaseUrl) : null;
 

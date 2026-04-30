@@ -10,6 +10,9 @@ export default defineConfig({
 	vite: {
 		resolve: {
 			alias: {
+				'@astrojs/vercel/entrypoint': fileURLToPath(
+					new URL('./node_modules/@astrojs/vercel/dist/serverless/entrypoint.js', import.meta.url)
+				),
 				'astro/entrypoints/prerender': fileURLToPath(
 					new URL('./node_modules/astro/dist/entrypoints/prerender.js', import.meta.url)
 				)

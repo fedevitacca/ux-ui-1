@@ -6,7 +6,7 @@ const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <Layout
-	title="Milwaukee Bucks | Locker"
+	title="Milwaukee Bucks | Notas"
 	description="Area serverless del catalogo Bucks con autenticacion propia y notas personales persistidas en Neon."
 >
 	<Navbar />
@@ -14,7 +14,7 @@ const baseUrl = import.meta.env.BASE_URL;
 		<section class="hero">
 			<div>
 				<p class="eyebrow">TP 2 Serverless</p>
-				<h1>Locker personal del catalogo Bucks.</h1>
+				<h1>Notas personales del catalogo de los Bucks.</h1>
 				<p class="lead">
 					Registrate, inicia sesion y guarda tus propios apuntes de scouting sobre jugadores,
 					partidos o decisiones del equipo. Cada registro queda asociado a tu usuario.
@@ -22,15 +22,6 @@ const baseUrl = import.meta.env.BASE_URL;
 			</div>
 			<a class="back-link" href={baseUrl}>Volver al portal</a>
 		</section>
-
-		<section class="setup-warning" aria-live="polite">
-			<strong>Backend serverless con Neon</strong>
-			<span>
-				Para activar el locker en local o Vercel se usan DATABASE_URL y AUTH_SECRET. El SQL esta
-				documentado en README.md.
-			</span>
-		</section>
-
 		<section class="locker-app" data-locker>
 			<div class="auth-panel">
 				<div class="panel-heading">
@@ -72,7 +63,7 @@ const baseUrl = import.meta.env.BASE_URL;
 			<div class="crud-panel">
 				<div class="panel-heading">
 					<p class="mini-eyebrow">Base de datos</p>
-					<h2>Apuntes del locker</h2>
+					<h2>Notas personales</h2>
 				</div>
 
 				<form class="note-form" data-note-form>
@@ -135,6 +126,7 @@ const baseUrl = import.meta.env.BASE_URL;
 		const container = document.querySelector('[data-locker]');
 		if (!(container instanceof HTMLElement)) return;
 
+		const setupStatus = document.querySelector('[data-setup-status]');
 		const authForm = container.querySelector('[data-auth-form]');
 		const noteForm = container.querySelector('[data-note-form]');
 		const statusEl = container.querySelector('[data-status]');
@@ -178,6 +170,23 @@ const baseUrl = import.meta.env.BASE_URL;
 			}
 
 			return payload;
+		};
+
+		const checkSetup = async () => {
+			if (!(setupStatus instanceof HTMLElement)) return;
+			const message = setupStatus.querySelector('span');
+			try {
+				await request('/api/health');
+				setupStatus.dataset.tone = 'success';
+				if (message instanceof HTMLElement) {
+					message.textContent = 'Conexion activa. El locker ya puede guardar datos en Neon.';
+				}
+			} catch (error) {
+				setupStatus.dataset.tone = 'error';
+				if (message instanceof HTMLElement) {
+					message.textContent = error.message;
+				}
+			}
 		};
 
 		const saveSession = (nextSession) => {
@@ -300,7 +309,7 @@ const baseUrl = import.meta.env.BASE_URL;
 			}
 
 			if (!notes.length) {
-				notesList.innerHTML = '<p class="empty">Todavia no guardaste apuntes en tu locker.</p>';
+				notesList.innerHTML = '<p class="empty">Todavia no guardaste apuntes en tu notas.</p>';
 				return;
 			}
 
@@ -373,6 +382,7 @@ const baseUrl = import.meta.env.BASE_URL;
 			session = null;
 		}
 		renderSession();
+		checkSetup();
 		if (session) {
 			loadNotes().catch((error) => {
 				saveSession(null);
@@ -472,6 +482,18 @@ const baseUrl = import.meta.env.BASE_URL;
 		gap: 0.25rem;
 		padding: 1rem;
 		border-radius: 16px;
+	}
+
+	.setup-warning[data-tone='success'] {
+		border-color: color-mix(in srgb, var(--brand) 42%, var(--border) 58%);
+	}
+
+	.setup-warning[data-tone='error'] {
+		border-color: color-mix(in srgb, #b42318 46%, var(--border) 54%);
+	}
+
+	.setup-warning[data-tone='error'] span {
+		color: #b42318;
 	}
 
 	.locker-app {

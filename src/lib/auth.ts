@@ -1,11 +1,12 @@
 import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from 'node:crypto';
+import { getServerEnv } from './env';
 
 export type AuthUser = {
 	id: string;
 	email: string;
 };
 
-const getSecret = () => process.env.AUTH_SECRET ?? import.meta.env.AUTH_SECRET ?? '';
+const getSecret = () => getServerEnv('AUTH_SECRET');
 
 const toBase64Url = (value: Buffer | string) =>
 	Buffer.from(value).toString('base64url');
