@@ -107,3 +107,28 @@ npm run build
 ```bash
 npm run preview
 ```
+## URL de produccion
+
+https://TU-DEPLOY.vercel.app
+
+## Flujo de trabajo
+
+El trabajo se traza en GitHub: cada tarea tiene su issue antes de empezar, y todo cambio entra por un Pull Request revisado por el otro integrante. Nada se mergea directo a `main`.
+
+### Convencion de ramas
+
+- `feature/nombre-feature` para nuevas funcionalidades
+- `fix/nombre-bug` para correcciones
+
+El PR referencia el issue que resuelve (ej. `closes #12`) y necesita al menos una revisión aprobada para mergearse.
+
+## Calidad y CI/CD
+
+El pipeline corre en cada push y PR a `main` (`lint → tests → build → deploy`). El deploy a producción solo ocurre si todos los pasos anteriores pasan. Las decisiones de calidad están documentadas en [`CALIDAD.md`](./CALIDAD.md).
+
+Para correr los tests en local:
+
+```
+npm run test       # unitarios (Vitest)
+npm run test:e2e   # E2E (Playwright)
+```
